@@ -14,6 +14,7 @@ start:
 		errs.Write([]byte(err.Error()))
 		goto start
 	}
+
 	counter, err := state.Get(string(word))
 	if err != nil {
 		errs.Write([]byte(err.Error()))
@@ -28,6 +29,8 @@ start:
 		errs.Write([]byte(err.Error()))
 		goto start
 	}
+	fmt.Println("Read ", string(word))
+	fmt.Println("# occur ", counter)
 	goto start
 }
 func main() {

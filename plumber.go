@@ -43,7 +43,9 @@ func (d *DumbStream) Read(p []byte) (n int, err error) {
 	if len(v) > len(p) {
 		return -1, errors.New("size don't match")
 	}
-	p = []byte(v)
+	for idx, b := range v {
+		p[idx] = b
+	}
 	return len(p), nil
 }
 func (d *DumbStream) Write(p []byte) (n int, err error) {
