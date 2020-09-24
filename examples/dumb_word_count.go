@@ -6,19 +6,11 @@ import (
 	"github.com/amirrezaask/plumber"
 )
 
-func lambda(state plumber.State, in plumber.Stream, _ plumber.Stream, errs plumber.Stream) {
-start:
-	word := make([]byte, 1024)
-	_, err := in.Read(word)
-	if err != nil {
-		errs.Write([]byte(err.Error()))
-		goto start
-	}
-
+func lambda(state plumber.State, value interface{}) (interface{}, error) {
+	word := value.(string)
 	counter, err := state.Get(string(word))
 	if err != nil {
-		errs.Write([]byte(err.Error()))
-		goto start
+		return nil, err
 	}
 	if counter == nil {
 		counter = 0
@@ -26,40 +18,28 @@ start:
 	counter = counter.(int) + 1
 	err = state.Set(string(word), counter)
 	if err != nil {
-		errs.Write([]byte(err.Error()))
-		goto start
+		return nil, err
 	}
-	fmt.Println("Read ", string(word))
-	fmt.Println("# occur ", counter)
-	goto start
+	return nil, nil
 }
 func main() {
-	state := plumber.DumbState{}
-	in := &plumber.DumbStream{
-		Stream: make(chan []byte),
-	}
+	state := &plumber.DumbState{}
+	source := make(chan interface{})
 	go func() {
 		for {
-			_, err := in.Write([]byte("This is plumber"))
-			if err != nil {
-				fmt.Println("err  ", err)
-			}
+			source <- "Hello This is plumber"
 		}
 	}()
-	errs := &plumber.DumbStream{
-		Stream: make(chan []byte),
-	}
+	sink := make(chan interface{})
 	go func() {
-		var err []byte
-		for {
-			_, errRead := errs.Read(err)
-			if err != nil {
-				fmt.Println("err:: ", errRead)
-			}
-			if len(err) > 0 {
-				fmt.Println("err >> ", err)
-			}
+		for word := range sink {
+			fmt.Println(word)
 		}
 	}()
-	lambda(state, in, nil, errs)
+	system := plumber.NewDefaultSystem()
+	system.SetState(state)
+	errs := system.From(source).Map(lambda).To(sink).Initiate()
+	for err := range errs {
+		fmt.Println(err)
+	}
 }

@@ -48,15 +48,38 @@ func (s *system) To(st Stream) System {
 }
 
 func (s *system) Initiate() chan error {
-	//TODO: Implement
-	return nil
+	lcs := make([]*lamdaContainer, len(s.nodes))
+	for _, l := range s.nodes {
+		lc := &lamdaContainer{}
+		lc.l = l
+		lc.In = make(chan interface{})
+		lc.Out = make(chan interface{})
+		lcs = append(lcs, lc)
+	}
+	lcs[0].In = s.in
+	lcs[len(lcs)-1].Out = s.out
+
+	errs := make(chan error, 1024) //TODO: configure error chan cap
+	for _, lc := range lcs {
+		go func(container *lamdaContainer) {
+			for v := range container.In {
+				v, err := container.l(s.State(), v)
+				if err != nil {
+					errs <- err
+					continue
+				}
+				container.Out <- v
+			}
+		}(lc)
+	}
+	return errs
 }
 
 func setDefaultSystemConfigs(s System) System {
 
 	return s
 }
-func NewDefaultSystem(confs []SystemConfigurer) System {
+func NewDefaultSystem(confs ...SystemConfigurer) System {
 	confs = append(confs, setDefaultSystemConfigs)
 	var s System
 	s = &system{}
