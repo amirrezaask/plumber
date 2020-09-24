@@ -1,10 +1,6 @@
 package plumber
 
-import (
-	"io"
-)
-
-type Stream io.ReadWriteCloser
+type Stream chan interface{}
 
 //Each state backend should implement this.
 type State interface {
@@ -13,11 +9,18 @@ type State interface {
 }
 
 // Lambda is a stateful function
-type Lambda func(state State, in Stream, out Stream, errs Stream)
+type Lambda func(state State, input interface{}) (interface{}, error)
 
-// Runner runs functions
+type lamdaContainer struct {
+	l   Lambda
+	In  Stream
+	Out Stream
+}
+
 type Runner interface {
-	SetLogger(interface{}) //TODO: define logger interface
-	Start(name string, fn Lambda) chan error
-	Stop(name string) error
+	System
+	SetSystem(System)
+}
+
+func main() {
 }
