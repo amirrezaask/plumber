@@ -16,11 +16,3 @@ type lamdaContainer struct {
 	In  Stream
 	Out Stream
 }
-
-type Runner interface {
-	System
-	SetSystem(System)
-}
-
-func main() {
-}

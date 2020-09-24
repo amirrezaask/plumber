@@ -4,8 +4,10 @@ Plumber is a framework for creating data pipelines and stream processing tools.
 # Goals
 - Simple 
 - extensible
-- statefull
-- cluster support 
+- stateful ( both computation state and input stream position )
+- cluster support (runners manage execution and data partioning)
+- fault tolerance (multiple checkpoint strategies)
+- multiple strategies for handling failures ( at most once, at least once, exactly once (actually exactly once affect state))
 
 # Terminology
 ## Stream
