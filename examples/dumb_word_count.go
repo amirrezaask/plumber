@@ -2,12 +2,24 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/amirrezaask/plumber"
 )
 
-func lambda(state plumber.State, value interface{}) (interface{}, error) {
+func toLower(state plumber.State, value interface{}) (interface{}, error) {
 	word := value.(string)
+	word = strings.ToLower(word)
+	return word, nil
+}
+
+func toUpper(state plumber.State, value interface{}) (interface{}, error) {
+	word := value.(string)
+	word = strings.ToUpper(word)
+	return word, nil
+}
+func count(state plumber.State, input interface{}) (interface{}, error) {
+	word := input.(string)
 	counter, err := state.Get(string(word))
 	if err != nil {
 		return nil, err
@@ -20,14 +32,14 @@ func lambda(state plumber.State, value interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return word, nil
 }
 func main() {
 	state := &plumber.DumbState{}
 	source := make(chan interface{})
 	go func() {
 		for {
-			source <- "Hello This is plumber"
+			source <- "Hello ThIIs iS plumber"
 		}
 	}()
 	sink := make(chan interface{})
@@ -38,7 +50,7 @@ func main() {
 	}()
 	system := plumber.NewDefaultSystem()
 	system.SetState(state)
-	errs := system.From(source).Map(lambda).To(sink).Initiate()
+	errs := system.From(source).Map(toLower).Map(count).Map(toUpper).To(sink).Initiate()
 	for err := range errs {
 		fmt.Println(err)
 	}

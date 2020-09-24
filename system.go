@@ -48,17 +48,22 @@ func (s *system) To(st Stream) System {
 }
 
 func (s *system) Initiate() chan error {
-	lcs := make([]*lamdaContainer, len(s.nodes))
-	for _, l := range s.nodes {
+	var lcs []*lamdaContainer
+	for idx, n := range s.nodes {
 		lc := &lamdaContainer{}
-		lc.l = l
-		lc.In = make(chan interface{})
-		lc.Out = make(chan interface{})
+		lc.l = n
+		if idx == 0 {
+			lc.In = s.in
+		} else {
+			lc.In = lcs[idx-1].Out
+		}
+		if idx == len(s.nodes)-1 {
+			lc.Out = s.out
+		} else {
+			lc.Out = make(chan interface{})
+		}
 		lcs = append(lcs, lc)
 	}
-	lcs[0].In = s.in
-	lcs[len(lcs)-1].Out = s.out
-
 	errs := make(chan error, 1024) //TODO: configure error chan cap
 	for _, lc := range lcs {
 		go func(container *lamdaContainer) {
