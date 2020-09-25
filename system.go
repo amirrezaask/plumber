@@ -81,7 +81,6 @@ func (s *system) Initiate() chan error {
 }
 
 func setDefaultSystemConfigs(s System) System {
-
 	return s
 }
 func NewDefaultSystem(confs ...SystemConfigurer) System {

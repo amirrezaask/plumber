@@ -18,6 +18,7 @@ func toUpper(state plumber.State, value interface{}) (interface{}, error) {
 	word = strings.ToUpper(word)
 	return word, nil
 }
+
 func count(state plumber.State, input interface{}) (interface{}, error) {
 	word := input.(string)
 	counter, err := state.Get(string(word))
@@ -34,6 +35,7 @@ func count(state plumber.State, input interface{}) (interface{}, error) {
 	}
 	return word, nil
 }
+
 func main() {
 	state := &plumber.DumbState{}
 	source := make(chan interface{})
