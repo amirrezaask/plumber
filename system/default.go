@@ -13,11 +13,22 @@ type lamdaContainer struct {
 type SystemConfigurer func(s plumber.System) plumber.System
 
 type defaultSystem struct {
-	name  string
-	state plumber.State
-	nodes []plumber.Lambda
-	in    plumber.Stream
-	out   plumber.Stream
+	name       string
+	checkpoint plumber.Checkpoint
+	state      plumber.State
+	nodes      []plumber.Lambda
+	in         plumber.Stream
+	out        plumber.Stream
+}
+
+func (s *defaultSystem) Checkpoint() error {
+	panic("not implemeneted")
+}
+
+func (s *defaultSystem) SetCheckpoint(c plumber.Checkpoint) plumber.System {
+	panic("not implemented")
+	// s.checkpoint = c
+	// return s
 }
 
 func (s *defaultSystem) Name() string {

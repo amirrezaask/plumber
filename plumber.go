@@ -1,9 +1,11 @@
 package plumber
 
+//Stream
 type Stream interface {
 	Write(interface{}) error
 	StartReading() error
 	ReadChan() chan interface{}
+	// SinceLastCheckpoint() []string
 }
 
 // System
@@ -25,3 +27,6 @@ type State interface {
 
 // Lambda is a stateful function
 type Lambda func(state State, input interface{}) (interface{}, error)
+
+//Checkpoints for fault tolerant system.
+type Checkpoint func(State) error

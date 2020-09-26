@@ -12,7 +12,9 @@ func NewChanStream() plumber.Stream {
 	st.StartReading()
 	return st
 }
-
+func (d *ChanStream) StreamState() plumber.StreamState {
+	return nil
+}
 func (d *ChanStream) Write(v interface{}) error {
 	d.c <- v
 	return nil
