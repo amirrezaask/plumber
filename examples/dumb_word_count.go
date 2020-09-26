@@ -6,6 +6,7 @@ import (
 
 	"github.com/amirrezaask/plumber"
 	"github.com/amirrezaask/plumber/state"
+	"github.com/amirrezaask/plumber/stream"
 )
 
 func toLower(state plumber.State, value interface{}) (interface{}, error) {
@@ -39,26 +40,26 @@ func count(state plumber.State, input interface{}) (interface{}, error) {
 
 func main() {
 	state := state.NewDumbState()
-	source := make(chan interface{})
-	go func() {
+	input := stream.NewDumbStream(func(s plumber.Stream) {
 		for {
-			source <- "Hello ThIIs iS plumber"
+			s <- "Hello ThIIs iS plumber"
 		}
-	}()
-	sink := make(chan interface{})
-	go func() {
-		for word := range sink {
-			fmt.Println(word)
+	})
+	output := stream.NewDumbStream(func(s plumber.Stream) {
+		for v := range s {
+			if v != nil {
+				fmt.Println(v)
+			}
 		}
-	}()
+	})
 	system := plumber.NewDefaultSystem()
 	system.SetState(state)
 	errs := system.
-		Eat(source).
+		Eat(input).
 		Digest(toLower).
 		Digest(count).
 		Digest(toUpper).
-		Poop(sink).
+		Defecate(output).
 		Initiate()
 	for err := range errs {
 		fmt.Println(err)

@@ -7,7 +7,7 @@ type System interface {
 	SetState(State) System
 	Digest(Lambda) System
 	Eat(Stream) System
-	Poop(Stream) System
+	Defecate(Stream) System
 	Initiate() chan error
 }
 type SystemConfigurer func(s System) System
@@ -42,7 +42,7 @@ func (s *system) Eat(st Stream) System {
 	return s
 }
 
-func (s *system) Poop(st Stream) System {
+func (s *system) Defecate(st Stream) System {
 	s.out = st
 	return s
 }
