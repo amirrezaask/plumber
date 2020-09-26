@@ -24,9 +24,11 @@ func NewNatsStream(url string, subject string, options ...nats.Option) (plumber.
 		readChan: make(chan interface{}),
 	}, nil
 }
+
 func (n *NatsStream) ReadChan() chan interface{} {
 	return n.readChan
 }
+
 func (n *NatsStream) StartReading() error {
 	_, err := n.nc.Subscribe(n.subject, func(m *nats.Msg) {
 		n.readChan <- string(m.Data)

@@ -11,6 +11,7 @@ import (
 )
 
 func toLower(state plumber.State, value interface{}) (interface{}, error) {
+	// fmt.Println(value)
 	word := value.(string)
 	word = strings.ToLower(word)
 	return word, nil
@@ -38,13 +39,15 @@ func count(state plumber.State, input interface{}) (interface{}, error) {
 	}
 	return word, nil
 }
-
 func main() {
 	state := state.NewMapState()
-	input, err := stream.NewNatsStream("localhost:4222", "plumbertest")
+	input, err := stream.NewNatsStream("localhost:4222", "plumber")
+	// input := stream.NewChanStream()
 	go func() {
+		i := 0
 		for {
-			input.Write("This Is tHe eNd")
+			input.Write(fmt.Sprintf("This Is tHe eNd %d", i))
+			i++
 		}
 	}()
 	output := stream.NewChanStream()
