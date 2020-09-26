@@ -42,7 +42,20 @@ func count(state plumber.State, input interface{}) (interface{}, error) {
 func main() {
 	state := state.NewMapState()
 	input := stream.NewChanStream()
+	go func() {
+		for {
+			input.Write("This Is tHe eNd")
+		}
+	}()
 	output := stream.NewChanStream()
+	go func() {
+		output.StartReading()
+		for v := range output.ReadChan() {
+			if v != nil {
+				fmt.Println(v)
+			}
+		}
+	}()
 	system := system.NewDefaultSystem()
 	system.SetState(state)
 	errs, err := system.

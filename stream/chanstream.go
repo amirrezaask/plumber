@@ -20,7 +20,9 @@ func (d *ChanStream) ReadChan() chan interface{} {
 }
 func (d *ChanStream) StartReading() error {
 	go func() {
-		d.readChan <- d.c
+		for {
+			d.readChan <- <-d.c
+		}
 	}()
 	return nil
 }

@@ -50,6 +50,10 @@ func (s *defaultSystem) To(st plumber.Stream) plumber.System {
 
 func (s *defaultSystem) Initiate() (chan error, error) {
 	var lcs []*lamdaContainer
+	err := s.in.StartReading()
+	if err != nil {
+		return nil, err
+	}
 	for idx, n := range s.nodes {
 		lc := &lamdaContainer{}
 		lc.l = n
@@ -61,7 +65,11 @@ func (s *defaultSystem) Initiate() (chan error, error) {
 		if idx == len(s.nodes)-1 {
 			lc.Out = s.out
 		} else {
-			lc.Out = stream.NewDumbStream()
+			lc.Out = stream.NewChanStream()
+			err = lc.Out.StartReading()
+			if err != nil {
+				return nil, err
+			}
 		}
 		lcs = append(lcs, lc)
 	}
@@ -73,10 +81,7 @@ func (s *defaultSystem) Initiate() (chan error, error) {
 		}
 		go func(container *lamdaContainer) {
 			for v := range container.In.ReadChan() {
-				f := func(i interface{}) {
-					i = v
-				}
-				v, err := container.l(s.State(), f)
+				v, err := container.l(s.State(), v)
 				if err != nil {
 					errs <- err
 					continue
