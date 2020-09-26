@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/amirrezaask/plumber"
+	"github.com/amirrezaask/plumber/state"
 )
 
 func toLower(state plumber.State, value interface{}) (interface{}, error) {
@@ -37,7 +38,7 @@ func count(state plumber.State, input interface{}) (interface{}, error) {
 }
 
 func main() {
-	state := &plumber.DumbState{}
+	state := state.NewDumbState()
 	source := make(chan interface{})
 	go func() {
 		for {
@@ -52,7 +53,13 @@ func main() {
 	}()
 	system := plumber.NewDefaultSystem()
 	system.SetState(state)
-	errs := system.From(source).Map(toLower).Map(count).Map(toUpper).To(sink).Initiate()
+	errs := system.
+		Eat(source).
+		Digest(toLower).
+		Digest(count).
+		Digest(toUpper).
+		Poop(sink).
+		Initiate()
 	for err := range errs {
 		fmt.Println(err)
 	}

@@ -1,17 +1,6 @@
-package plumber
+package stream
 
 import "errors"
-
-type DumbState map[string]interface{}
-
-func (d DumbState) Get(k string) (interface{}, error) {
-	v := d[k]
-	return v, nil
-}
-func (d DumbState) Set(k string, v interface{}) error {
-	d[k] = v
-	return nil
-}
 
 type DumbStream struct {
 	Stream chan []byte

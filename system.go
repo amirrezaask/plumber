@@ -5,9 +5,9 @@ type System interface {
 	Name() string
 	State() State
 	SetState(State) System
-	Map(Lambda) System
-	From(Stream) System
-	To(Stream) System
+	Digest(Lambda) System
+	Eat(Stream) System
+	Poop(Stream) System
 	Initiate() chan error
 }
 type SystemConfigurer func(s System) System
@@ -32,17 +32,17 @@ func (s *system) SetState(st State) System {
 	return s
 }
 
-func (s *system) Map(l Lambda) System {
+func (s *system) Digest(l Lambda) System {
 	s.nodes = append(s.nodes, l)
 	return s
 }
 
-func (s *system) From(st Stream) System {
+func (s *system) Eat(st Stream) System {
 	s.in = st
 	return s
 }
 
-func (s *system) To(st Stream) System {
+func (s *system) Poop(st Stream) System {
 	s.out = st
 	return s
 }
@@ -68,7 +68,10 @@ func (s *system) Initiate() chan error {
 	for _, lc := range lcs {
 		go func(container *lamdaContainer) {
 			for v := range container.In {
-				v, err := container.l(s.State(), v)
+				f := func(i interface{}) {
+					i = v
+				}
+				v, err := container.l(s.State(), f)
 				if err != nil {
 					errs <- err
 					continue

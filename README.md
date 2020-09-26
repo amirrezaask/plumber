@@ -1,6 +1,11 @@
 # Plumber
 Plumber is a framework for creating data pipelines and stream processing tools.
 
+# Features 
+- Stateful
+- Fault Tolerance
+- Extensible
+
 # Goals
 - Simple 
 - extensible
@@ -11,9 +16,10 @@ Plumber is a framework for creating data pipelines and stream processing tools.
 
 # Terminology
 ## Stream
-Streams are the way we move data around.
+Streams are the way we move data around. Streams are the input and output of our application.
 ## Lambda 
 Lambdas are processing and actual program logic
 ## System 
-System is the collection of lambdas plus Input and output streams.
-System does all plumbing between lambdas.
+System is where our lambdas are glued together as a single application with input and output.
+## Runner
+Runners are used if you want cluster support, Runners are similar to systems but they can partition data.
