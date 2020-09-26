@@ -41,7 +41,8 @@ func count(state plumber.State, input interface{}) (interface{}, error) {
 }
 func main() {
 	state := state.NewMapState()
-	input, err := stream.NewNatsStream("localhost:4222", "plumber")
+	// input, err := stream.NewNatsStreaming("localhost:4222", "plumber", "clusterID", "thisclient")
+	input, err := stream.NewNats("localhost:4222", "plumber")
 	// input := stream.NewChanStream()
 	go func() {
 		i := 0

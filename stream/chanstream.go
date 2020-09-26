@@ -12,8 +12,8 @@ func NewChanStream() plumber.Stream {
 	st.StartReading()
 	return st
 }
-func (d *ChanStream) StreamState() plumber.StreamState {
-	return nil
+func (d *ChanStream) State() map[string]interface{} {
+	return map[string]interface{}{}
 }
 func (d *ChanStream) Write(v interface{}) error {
 	d.c <- v

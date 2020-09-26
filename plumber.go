@@ -5,11 +5,13 @@ type Stream interface {
 	Write(interface{}) error
 	StartReading() error
 	ReadChan() chan interface{}
-	// SinceLastCheckpoint() []string
+	State() map[string]interface{}
 }
 
 // System
 type System interface {
+	SetCheckpoint(Checkpoint) System
+	Checkpoint() error
 	Name() string
 	State() State
 	SetState(State) System

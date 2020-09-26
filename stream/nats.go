@@ -7,29 +7,32 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-type NatsStream struct {
+type Nats struct {
 	nc       *nats.Conn
 	subject  string
 	readChan chan interface{}
 }
 
-func NewNatsStream(url string, subject string, options ...nats.Option) (plumber.Stream, error) {
+func NewNats(url string, subject string, options ...nats.Option) (plumber.Stream, error) {
 	conn, err := nats.Connect(url, options...)
 	if err != nil {
 		return nil, err
 	}
-	return &NatsStream{
+	return &Nats{
 		nc:       conn,
 		subject:  subject,
 		readChan: make(chan interface{}),
 	}, nil
 }
+func (n *Nats) State() map[string]interface{} {
+	return map[string]interface{}{}
+}
 
-func (n *NatsStream) ReadChan() chan interface{} {
+func (n *Nats) ReadChan() chan interface{} {
 	return n.readChan
 }
 
-func (n *NatsStream) StartReading() error {
+func (n *Nats) StartReading() error {
 	_, err := n.nc.Subscribe(n.subject, func(m *nats.Msg) {
 		n.readChan <- string(m.Data)
 	})
@@ -39,7 +42,7 @@ func (n *NatsStream) StartReading() error {
 	return nil
 }
 
-func (n *NatsStream) Write(v interface{}) error {
+func (n *Nats) Write(v interface{}) error {
 	bs, err := json.Marshal(v)
 	if err != nil {
 		return err

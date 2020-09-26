@@ -1,6 +1,10 @@
 package system
 
 import (
+	"encoding/json"
+	"fmt"
+	"time"
+
 	"github.com/amirrezaask/plumber"
 	"github.com/amirrezaask/plumber/stream"
 )
@@ -22,13 +26,29 @@ type defaultSystem struct {
 }
 
 func (s *defaultSystem) Checkpoint() error {
-	panic("not implemeneted")
+	bsIn, err := json.Marshal(s.in.State())
+	if err != nil {
+		return err
+	}
+	bsOut, err := json.Marshal(s.out.State())
+	if err != nil {
+		return err
+	}
+
+	err = s.state.Set(fmt.Sprintf("__%s__IN", s.Name()), bsIn)
+	if err != nil {
+		return err
+	}
+	err = s.state.Set(fmt.Sprintf("__%s__OUT", s.Name()), bsOut)
+	if err != nil {
+		return err
+	}
+	return s.checkpoint(s.State())
 }
 
 func (s *defaultSystem) SetCheckpoint(c plumber.Checkpoint) plumber.System {
-	panic("not implemented")
-	// s.checkpoint = c
-	// return s
+	s.checkpoint = c
+	return s
 }
 
 func (s *defaultSystem) Name() string {
@@ -85,6 +105,15 @@ func (s *defaultSystem) Initiate() (chan error, error) {
 		lcs = append(lcs, lc)
 	}
 	errs := make(chan error, 1024) //TODO: configure error chan cap
+	//TODO: handle more strategies
+	go func() {
+		for range time.Tick(time.Second * 2) {
+			err := s.Checkpoint()
+			if err != nil {
+				errs <- err
+			}
+		}
+	}()
 	for _, lc := range lcs {
 		err := lc.In.StartReading()
 		if err != nil {
