@@ -25,6 +25,7 @@ type System interface {
 type State interface {
 	Set(key string, value interface{}) error
 	Get(key string) (interface{}, error)
+	All() (map[string]interface{}, error)
 }
 
 // Lambda is a stateful function

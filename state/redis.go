@@ -16,7 +16,6 @@ type redisState struct {
 }
 
 func NewRedisState(ctx context.Context, host, port, user, password string, database int) plumber.State {
-
 	c := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", host, port),
 		DB:       database,
@@ -28,7 +27,21 @@ func NewRedisState(ctx context.Context, host, port, user, password string, datab
 		ctx:  ctx,
 	}
 }
-
+func (r *redisState) All() (map[string]interface{}, error) {
+	res := r.conn.Keys(r.ctx, "*")
+	if err := res.Err(); err != nil {
+		return nil, err
+	}
+	m := map[string]interface{}{}
+	for _, k := range res.Val() {
+		val := r.conn.Get(r.ctx, k)
+		if err := val.Err(); err != nil {
+			return nil, err
+		}
+		m[k] = val.Val()
+	}
+	return m, nil
+}
 func (r *redisState) Get(key string) (interface{}, error) {
 	res := r.conn.Get(r.ctx, key)
 	if err := res.Err(); err != nil {
