@@ -1,6 +1,21 @@
 package plumber
 
-type Stream chan interface{}
+type Stream interface {
+	Write(interface{}) error
+	StartReading() error
+	ReadChan() chan interface{}
+}
+
+// System
+type System interface {
+	Name() string
+	State() State
+	SetState(State) System
+	Then(Lambda) System
+	From(Stream) System
+	To(Stream) System
+	Initiate() (chan error, error)
+}
 
 //Each state backend should implement this.
 type State interface {
@@ -10,9 +25,3 @@ type State interface {
 
 // Lambda is a stateful function
 type Lambda func(state State, input interface{}) (interface{}, error)
-
-type lamdaContainer struct {
-	l   Lambda
-	In  Stream
-	Out Stream
-}
