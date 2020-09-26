@@ -29,7 +29,7 @@ func (n *NatsStream) ReadChan() chan interface{} {
 }
 func (n *NatsStream) StartReading() error {
 	_, err := n.nc.Subscribe(n.subject, func(m *nats.Msg) {
-		n.readChan <- m.Data
+		n.readChan <- string(m.Data)
 	})
 	if err != nil {
 		return err

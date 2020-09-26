@@ -8,7 +8,9 @@ type ChanStream struct {
 }
 
 func NewChanStream() plumber.Stream {
-	return &ChanStream{c: make(chan interface{}), readChan: make(chan interface{})}
+	st := &ChanStream{c: make(chan interface{}), readChan: make(chan interface{})}
+	st.StartReading()
+	return st
 }
 
 func (d *ChanStream) Write(v interface{}) error {

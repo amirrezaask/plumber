@@ -41,7 +41,7 @@ func count(state plumber.State, input interface{}) (interface{}, error) {
 
 func main() {
 	state := state.NewMapState()
-	input := stream.NewChanStream()
+	input, err := stream.NewNatsStream("localhost:4222", "plumbertest")
 	go func() {
 		for {
 			input.Write("This Is tHe eNd")
@@ -49,7 +49,6 @@ func main() {
 	}()
 	output := stream.NewChanStream()
 	go func() {
-		output.StartReading()
 		for v := range output.ReadChan() {
 			if v != nil {
 				fmt.Println(v)
