@@ -1,11 +1,6 @@
 # Plumber
 Plumber is a framework for creating data pipelines and stream processing tools.
 
-# Features 
-- Stateful
-- Fault Tolerance
-- Extensible
-
 # Goals
 - Simple 
 - extensible
@@ -15,8 +10,16 @@ Plumber is a framework for creating data pipelines and stream processing tools.
 - multiple strategies for handling failures ( at most once, at least once, exactly once (actually exactly once affect state))
 
 # Terminology
+## State
+Backends for our stateful processor.
+### Redis
+### Map
+### Bolt
 ## Stream
 Streams are the way we move data around. Streams are the input and output of our application.
+### Nats
+### Nats-Streaming
+### Channel
 ## Lambda 
 Lambdas are processing and actual program logic
 ## System 
