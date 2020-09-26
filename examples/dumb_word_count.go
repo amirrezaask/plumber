@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/amirrezaask/plumber"
+	"github.com/amirrezaask/plumber/checkpoint"
 	"github.com/amirrezaask/plumber/state"
 	"github.com/amirrezaask/plumber/stream"
 	"github.com/amirrezaask/plumber/system"
@@ -40,32 +42,42 @@ func count(state plumber.State, input interface{}) (interface{}, error) {
 	return word, nil
 }
 func main() {
+	// create an state handler
 	state := state.NewMapState()
+	// create checkpoint handler
+	cpt := checkpoint.WithInterval(time.Second * 1)
+
 	// input, err := stream.NewNatsStreaming("localhost:4222", "plumber", "clusterID", "thisclient")
-	input, err := stream.NewNats("localhost:4222", "plumber")
-	// input := stream.NewChanStream()
+	// input, err := stream.NewNats("localhost:4222", "plumber")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	input := stream.NewChanStream()
+	// feed some data into our input stream
 	go func() {
-		i := 0
 		for {
-			input.Write(fmt.Sprintf("This Is tHe eNd %d", i))
-			i++
+			input.Write("This Is tHe eNd")
 		}
 	}()
 	output := stream.NewChanStream()
+	//consume our output data
 	go func() {
 		for v := range output.ReadChan() {
 			if v != nil {
-				fmt.Println(v)
+				// fmt.Println(v)
 			}
 		}
 	}()
-	system := system.NewDefaultSystem()
-	system.SetState(state)
+
+	//create our plumber pipeline
 	errs, err := system.
+		NewDefaultSystem().
+		SetCheckpoint(cpt).
+		SetState(state).
 		From(input).
 		Then(toLower).
-		Then(count).
 		Then(toUpper).
+		Then(count).
 		To(output).
 		Initiate()
 	if err != nil {

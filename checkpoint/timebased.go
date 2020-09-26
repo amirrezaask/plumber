@@ -1,6 +1,7 @@
 package checkpoint
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/amirrezaask/plumber"
@@ -8,6 +9,13 @@ import (
 
 func WithInterval(d time.Duration) plumber.Checkpoint {
 	return func(s plumber.State) error {
-		return s.Set("checkpoint", s)
+		for range time.Tick(d) {
+			fmt.Println("$$$$$$$$$$")
+			all, _ := s.All()
+			fmt.Printf("%v\n", all)
+			s.Set("____checkpoint", all)
+			fmt.Println("###########")
+		}
+		return nil
 	}
 }
