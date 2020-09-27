@@ -1,0 +1,13 @@
+{
+    "from": {
+        "type": "nats",
+        "args": {
+        }
+    },
+    "to": {},
+    "checkpoint": {},
+    "state": {},
+    "pipeline": [
+        "bin1", "bin2"
+    ],
+}
