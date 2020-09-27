@@ -8,14 +8,15 @@ import (
 )
 
 func WithInterval(d time.Duration) plumber.Checkpoint {
-	return func(s plumber.State) error {
+	return func(s plumber.System) {
 		for range time.Tick(d) {
-			fmt.Println("$$$$$$$$$$")
-			all, _ := s.All()
-			fmt.Printf("%v\n", all)
-			s.Set("____checkpoint", all)
-			fmt.Println("###########")
+			m, err := s.GetStateCopy()
+			if err != nil {
+				s.Errors() <- err
+				continue
+			}
+			s.State().Set("____checkpoint", m)
+			fmt.Printf("\n\n%+v", m)
 		}
-		return nil
 	}
 }

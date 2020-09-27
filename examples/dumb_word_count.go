@@ -13,7 +13,6 @@ import (
 )
 
 func toLower(state plumber.State, value interface{}) (interface{}, error) {
-	// fmt.Println(value)
 	word := value.(string)
 	word = strings.ToLower(word)
 	return word, nil

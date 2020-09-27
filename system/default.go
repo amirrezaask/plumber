@@ -3,7 +3,6 @@ package system
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/amirrezaask/plumber"
 	"github.com/amirrezaask/plumber/stream"
@@ -18,6 +17,7 @@ type SystemConfigurer func(s plumber.System) plumber.System
 
 type defaultSystem struct {
 	name       string
+	errs       chan error
 	checkpoint plumber.Checkpoint
 	state      plumber.State
 	nodes      []plumber.Lambda
@@ -25,25 +25,36 @@ type defaultSystem struct {
 	out        plumber.Stream
 }
 
-func (s *defaultSystem) Checkpoint() error {
+func (s *defaultSystem) Errors() chan error {
+	return s.errs
+}
+func (s *defaultSystem) Checkpoint() {
+	s.checkpoint(s)
+}
+
+func (s *defaultSystem) GetStateCopy() (map[string]interface{}, error) {
 	bsIn, err := json.Marshal(s.in.State())
 	if err != nil {
-		return err
+		return nil, err
 	}
 	bsOut, err := json.Marshal(s.out.State())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = s.state.Set(fmt.Sprintf("__%s__IN", s.Name()), bsIn)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = s.state.Set(fmt.Sprintf("__%s__OUT", s.Name()), bsOut)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return s.checkpoint(s.State())
+	m, err := s.state.All()
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (s *defaultSystem) SetCheckpoint(c plumber.Checkpoint) plumber.System {
@@ -105,15 +116,13 @@ func (s *defaultSystem) Initiate() (chan error, error) {
 		lcs = append(lcs, lc)
 	}
 	errs := make(chan error, 1024) //TODO: configure error chan cap
-	//TODO: handle more strategies
-	go func() {
-		for range time.Tick(time.Second * 2) {
-			err := s.Checkpoint()
-			if err != nil {
-				errs <- err
-			}
-		}
-	}()
+
+	//start checkpoint process
+	go s.Checkpoint()
+
+	if err != nil {
+		errs <- err
+	}
 	for _, lc := range lcs {
 		err := lc.In.StartReading()
 		if err != nil {

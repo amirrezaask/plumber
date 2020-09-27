@@ -10,19 +10,19 @@ Plumber is a framework for creating data pipelines and stream processing tools.
 - multiple strategies for handling failures ( at most once, at least once, exactly once (actually exactly once affect state))
 
 # Terminology
+## Checkpoint
+Checkpoints run under special circumstances and backup current state of system. 
 ## State
 Backends for our stateful processor.
 ### Redis
 ### Map
 ### Bolt
 ## Stream
-Streams are the way we move data around. Streams are the input and output of our application.
+Streams are the way we move data around. Streams are the input and output of our application. Streams are stateful and their state is just a part of System state.
 ### Nats
 ### Nats-Streaming
 ### Channel
 ## Lambda 
-Lambdas are processing and actual program logic
+Lambdas are pure functions that get the state and an input and return some output.
 ## System 
-System is where our lambdas are glued together as a single application with input and output.
-## Runner
-Runners are used if you want cluster support, Runners are similar to systems but they can partition data.
+System is where our lambdas are glued together and state is being handled as a single application with input and output.

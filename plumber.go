@@ -10,8 +10,10 @@ type Stream interface {
 
 // System
 type System interface {
+	Errors() chan error
 	SetCheckpoint(Checkpoint) System
-	Checkpoint() error
+	Checkpoint()
+	GetStateCopy() (map[string]interface{}, error)
 	Name() string
 	State() State
 	SetState(State) System
@@ -32,4 +34,4 @@ type State interface {
 type Lambda func(state State, input interface{}) (interface{}, error)
 
 //Checkpoints for fault tolerant system.
-type Checkpoint func(State) error
+type Checkpoint func(System)
