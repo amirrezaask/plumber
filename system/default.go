@@ -51,6 +51,10 @@ func (s *defaultSystem) Then(l plumber.Lambda) plumber.System {
 	s.nodes = append(s.nodes, l)
 	return s
 }
+func (s *defaultSystem) Thens(ls ...plumber.Lambda) plumber.System {
+	s.nodes = append(s.nodes, ls...)
+	return s
+}
 
 func (s *defaultSystem) From(st plumber.Stream) plumber.System {
 	s.in = st

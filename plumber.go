@@ -20,6 +20,7 @@ type System interface {
 	State() State
 	SetState(State) System
 	Then(Lambda) System
+	Thens(...Lambda) System
 	From(Stream) System
 	To(Stream) System
 	Initiate() (chan error, error)
