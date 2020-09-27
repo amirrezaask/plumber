@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -31,7 +32,7 @@ func lambdaFromBin(path string) plumber.Lambda {
 	}
 }
 
-type stream struct {
+type Stream struct {
 	Type string                 `json:"type"`
 	Args map[string]interface{} `json:"args"`
 }
@@ -45,8 +46,8 @@ type State struct {
 }
 
 type config struct {
-	From       *stream     `json:"from"`
-	To         *stream     `json:"to"`
+	From       *Stream     `json:"from"`
+	To         *Stream     `json:"to"`
 	Checkpoint *Checkpoint `json:"checkpoint"`
 	State      *State      `json:"state"`
 	Pipeline   []string    `json:"pipeline"`
@@ -56,5 +57,14 @@ func main() {
 	if len(os.Args) < 2 {
 		log.Fatal("need config")
 	}
-
+	bs, err := ioutil.ReadFile(os.Args[1])
+	if err != nil {
+		log.Fatal(err)
+	}
+	var c config
+	err = json.Unmarshal(bs, &c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%+v", c)
 }

@@ -1,13 +1,33 @@
 {
     "from": {
-        "type": "nats",
+        "type": "nats-streaming",
         "args": {
+            "url": "localhost:4222",
+            "subject": "plumber"
         }
     },
-    "to": {},
-    "checkpoint": {},
-    "state": {},
+    "to": {
+        "type": "nats-streaming",
+        "args": {
+            "url": "localhost:4222",
+            "subject": "plumber-out"
+        }
+    },
+    "checkpoint": {
+        "type": "time-based",
+        "args": {
+            "interval": 2
+        }
+    },
+    "state": {
+        "type": "redis",
+        "args": {
+            "host": "localhost",
+            "port": "6379",
+            "database": "0"
+        }
+    },
     "pipeline": [
         "bin1", "bin2"
-    ],
+    ]
 }

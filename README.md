@@ -8,7 +8,14 @@ Plumber is a framework for creating data pipelines and stream processing tools.
 - cluster support (runners manage execution and data partioning)
 - fault tolerance (multiple checkpoint strategies)
 - multiple strategies for handling failures ( at most once, at least once, exactly once (actually exactly once affect state))
+# Binary protocol
+Plumber can use binaries as part of it's processing units. Binraies should get two inputs and return two outputs.
+## Example
+```shell
+$ ./bin1 <state json encoded> input
+<updated fields of state json encoded> output
 
+```
 # Terminology
 ## Checkpoint
 Checkpoints run under special circumstances and backup current state of system. 
