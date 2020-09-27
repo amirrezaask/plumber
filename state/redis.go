@@ -27,6 +27,11 @@ func NewRedisState(ctx context.Context, host, port, user, password string, datab
 		ctx:  ctx,
 	}
 }
+
+func (r *redisState) Flush() error {
+	return nil
+}
+
 func (r *redisState) All() (map[string]interface{}, error) {
 	res := r.conn.Keys(r.ctx, "*")
 	if err := res.Err(); err != nil {

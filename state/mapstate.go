@@ -24,6 +24,9 @@ func (d *MapState) Set(k string, v interface{}) error {
 	d.m[k] = v
 	return nil
 }
+func (d *MapState) Flush() error {
+	return nil
+}
 func (d *MapState) All() (map[string]interface{}, error) {
 	d.lock.RLock()
 	defer d.lock.RUnlock()

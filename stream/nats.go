@@ -31,6 +31,10 @@ func (n *Nats) State() map[string]interface{} {
 func (n *Nats) ReadChan() chan interface{} {
 	return n.readChan
 }
+func (n *Nats) Name() string {
+	return "NATS"
+}
+func (n *Nats) LoadState(s map[string]interface{}) {}
 
 func (n *Nats) StartReading() error {
 	_, err := n.nc.Subscribe(n.subject, func(m *nats.Msg) {

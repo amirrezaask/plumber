@@ -1,9 +1,6 @@
 package system
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/amirrezaask/plumber"
 	"github.com/amirrezaask/plumber/stream"
 )
@@ -30,31 +27,6 @@ func (s *defaultSystem) Errors() chan error {
 }
 func (s *defaultSystem) Checkpoint() {
 	s.checkpoint(s)
-}
-
-func (s *defaultSystem) GetStateCopy() (map[string]interface{}, error) {
-	bsIn, err := json.Marshal(s.in.State())
-	if err != nil {
-		return nil, err
-	}
-	bsOut, err := json.Marshal(s.out.State())
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.state.Set(fmt.Sprintf("__%s__IN", s.Name()), bsIn)
-	if err != nil {
-		return nil, err
-	}
-	err = s.state.Set(fmt.Sprintf("__%s__OUT", s.Name()), bsOut)
-	if err != nil {
-		return nil, err
-	}
-	m, err := s.state.All()
-	if err != nil {
-		return nil, err
-	}
-	return m, nil
 }
 
 func (s *defaultSystem) SetCheckpoint(c plumber.Checkpoint) plumber.System {
@@ -85,14 +57,44 @@ func (s *defaultSystem) From(st plumber.Stream) plumber.System {
 	return s
 }
 
+func (s *defaultSystem) UpdateState() error {
+	err := s.State().Set(s.in.Name(), s.in.State())
+	if err != nil {
+		return err
+	}
+	err = s.State().Set(s.out.Name(), s.out.State())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *defaultSystem) To(st plumber.Stream) plumber.System {
 	s.out = st
 	return s
 }
 
 func (s *defaultSystem) Initiate() (chan error, error) {
+	// update streams state if there is any checkpoints
+	inState, err := s.State().Get(s.in.Name())
+	if err != nil {
+		return nil, err
+	}
+	outState, err := s.State().Get(s.out.Name())
+	if err != nil {
+		return nil, err
+	}
+	if inState != nil {
+		s.in.LoadState(inState.(map[string]interface{}))
+	}
+	if outState != nil {
+		s.out.LoadState(outState.(map[string]interface{}))
+	}
+	// start input stream
+	err = s.in.StartReading()
+
+	// connect lambdas through channels
 	var lcs []*lamdaContainer
-	err := s.in.StartReading()
 	if err != nil {
 		return nil, err
 	}

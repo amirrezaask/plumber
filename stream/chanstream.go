@@ -12,6 +12,14 @@ func NewChanStream() plumber.Stream {
 	st.StartReading()
 	return st
 }
+
+func (d *ChanStream) Name() string {
+	return "chan-stream"
+}
+
+func (d *ChanStream) LoadState(m map[string]interface{}) {
+	return
+}
 func (d *ChanStream) State() map[string]interface{} {
 	return map[string]interface{}{}
 }

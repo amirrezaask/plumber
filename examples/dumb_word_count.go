@@ -41,11 +41,6 @@ func count(state plumber.State, input interface{}) (interface{}, error) {
 	return word, nil
 }
 func main() {
-	// create an state handler
-	state := state.NewMapState()
-	// create checkpoint handler
-	cpt := checkpoint.WithInterval(time.Second * 1)
-
 	// input, err := stream.NewNatsStreaming("localhost:4222", "plumber", "clusterID", "thisclient")
 	// input, err := stream.NewNats("localhost:4222", "plumber")
 	// if err != nil {
@@ -63,7 +58,7 @@ func main() {
 	go func() {
 		for v := range output.ReadChan() {
 			if v != nil {
-				// fmt.Println(v)
+				fmt.Println(v)
 			}
 		}
 	}()
@@ -71,8 +66,10 @@ func main() {
 	//create our plumber pipeline
 	errs, err := system.
 		NewDefaultSystem().
-		SetCheckpoint(cpt).
-		SetState(state).
+		SetCheckpoint(checkpoint.WithInterval(time.Second * 1)).
+		//SetState(state.NewRedis())
+		//SetState(state.NewBolt())
+		SetState(state.NewMapState()).
 		From(input).
 		Then(toLower).
 		Then(toUpper).

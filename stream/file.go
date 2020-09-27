@@ -28,7 +28,9 @@ func (f *fileStream) Write(v interface{}) error {
 	_, err := f.fd.Write(v.([]byte))
 	return err
 }
-
+func (f *fileStream) Name() string {
+	return "file-stream"
+}
 func (f *fileStream) StartReading() error {
 	go func() {
 		for {
@@ -43,7 +45,9 @@ func (f *fileStream) StartReading() error {
 	}()
 	return nil
 }
-
+func (f *fileStream) LoadState(s map[string]interface{}) {
+	f.currentByte = s["current_byte"].(uint64)
+}
 func (f *fileStream) ReadChan() chan interface{} {
 	return f.readChan
 }

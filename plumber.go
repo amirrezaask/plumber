@@ -2,18 +2,20 @@ package plumber
 
 //Stream
 type Stream interface {
+	LoadState(map[string]interface{})
 	Write(interface{}) error
 	StartReading() error
 	ReadChan() chan interface{}
 	State() map[string]interface{}
+	Name() string
 }
 
 // System
 type System interface {
+	UpdateState() error
 	Errors() chan error
 	SetCheckpoint(Checkpoint) System
 	Checkpoint()
-	GetStateCopy() (map[string]interface{}, error)
 	Name() string
 	State() State
 	SetState(State) System
@@ -28,6 +30,7 @@ type State interface {
 	Set(key string, value interface{}) error
 	Get(key string) (interface{}, error)
 	All() (map[string]interface{}, error)
+	Flush() error
 }
 
 // Lambda is a stateful function
