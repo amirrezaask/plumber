@@ -21,14 +21,14 @@ $ ./bin1 <state json encoded> input
 Checkpoints run under special circumstances and backup current state of system. 
 ## State
 Backends for our stateful processor.
-### Redis
-### Map
-### Bolt
+- Redis
+- Map
+- Bolt
 ## Stream
 Streams are the way we move data around. Streams are the input and output of our application. Streams are stateful and their state is just a part of System state.
-### Nats
-### Nats-Streaming
-### Channel
+- Nats
+- Nats-Streaming
+- Channel
 ## Lambda 
 Lambdas are pure functions that get the state and an input and return some output.
 ## System 
