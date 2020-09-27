@@ -1,6 +1,7 @@
 package state
 
 import (
+	"strconv"
 	"sync"
 
 	"github.com/amirrezaask/plumber"
@@ -17,7 +18,17 @@ func (d *MapState) Get(k string) (interface{}, error) {
 	v := d.m[k]
 	return v, nil
 }
-
+func (d *MapState) GetInt(k string) (int, error) {
+	v, err := d.Get(k)
+	if err != nil {
+		return -1, err
+	}
+	i, err := strconv.Atoi(v.(string))
+	if err != nil {
+		return -1, err
+	}
+	return i, nil
+}
 func (d *MapState) Set(k string, v interface{}) error {
 	d.lock.Lock()
 	defer d.lock.Unlock()

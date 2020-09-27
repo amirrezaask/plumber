@@ -28,6 +28,7 @@ type System interface {
 //Each state backend should implement this.
 type State interface {
 	Set(key string, value interface{}) error
+	GetInt(key string) (int, error)
 	Get(key string) (interface{}, error)
 	All() (map[string]interface{}, error)
 	Flush() error

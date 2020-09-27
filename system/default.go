@@ -80,6 +80,7 @@ func (s *defaultSystem) Initiate() (chan error, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	outState, err := s.State().Get(s.out.Name())
 	if err != nil {
 		return nil, err

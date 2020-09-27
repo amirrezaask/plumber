@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -26,14 +27,11 @@ func toUpper(state plumber.State, value interface{}) (interface{}, error) {
 
 func count(state plumber.State, input interface{}) (interface{}, error) {
 	word := input.(string)
-	counter, err := state.Get(string(word))
+	counter, err := state.GetInt(string(word))
 	if err != nil {
 		return nil, err
 	}
-	if counter == nil {
-		counter = 0
-	}
-	counter = counter.(int) + 1
+	counter = counter + 1
 	err = state.Set(string(word), counter)
 	if err != nil {
 		return nil, err
@@ -62,14 +60,17 @@ func main() {
 			}
 		}
 	}()
-
+	r, err := state.NewRedis(context.Background(), "localhost", "6379", "", "", 0)
+	if err != nil {
+		panic(err)
+	}
 	//create our plumber pipeline
 	errs, err := system.
 		NewDefaultSystem().
 		SetCheckpoint(checkpoint.WithInterval(time.Second * 1)).
-		//SetState(state.NewRedis())
+		SetState(r).
 		//SetState(state.NewBolt())
-		SetState(state.NewMapState()).
+		// SetState(state.NewMapState()).
 		From(input).
 		Then(toLower).
 		Then(toUpper).
@@ -77,7 +78,7 @@ func main() {
 		To(output).
 		Initiate()
 	if err != nil {
-		panic("starting system failed")
+		panic(err)
 	}
 	for err := range errs {
 		fmt.Println(err)

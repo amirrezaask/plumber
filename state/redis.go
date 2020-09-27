@@ -3,6 +3,7 @@ package state
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/amirrezaask/plumber"
@@ -15,17 +16,21 @@ type redisState struct {
 	ttl  time.Duration
 }
 
-func NewRedisState(ctx context.Context, host, port, user, password string, database int) plumber.State {
+func NewRedis(ctx context.Context, host, port, user, password string, database int) (plumber.State, error) {
 	c := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", host, port),
 		DB:       database,
 		Username: user,
 		Password: password,
 	})
+	res := c.Ping(ctx)
+	if err := res.Err(); err != nil {
+		return nil, err
+	}
 	return &redisState{
 		conn: c,
 		ctx:  ctx,
-	}
+	}, nil
 }
 
 func (r *redisState) Flush() error {
@@ -47,9 +52,26 @@ func (r *redisState) All() (map[string]interface{}, error) {
 	}
 	return m, nil
 }
+func (r *redisState) GetInt(key string) (int, error) {
+	v, err := r.Get(key)
+	if err != nil {
+		return -1, err
+	}
+	if v == nil {
+		return 0, nil
+	}
+	i, err := strconv.Atoi(v.(string))
+	if err != nil {
+		return -1, err
+	}
+	return i, nil
+}
 func (r *redisState) Get(key string) (interface{}, error) {
 	res := r.conn.Get(r.ctx, key)
 	if err := res.Err(); err != nil {
+		if err == redis.Nil {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return res.Val(), nil
