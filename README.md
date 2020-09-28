@@ -34,3 +34,6 @@ it just calls them.
 
 
 
+## TODO
+- Standardize Stream constructors so we don't need to explicily name them in our command line tool.
+
