@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"time"
 
 	"github.com/amirrezaask/plumber"
@@ -15,39 +14,24 @@ import (
 	"github.com/amirrezaask/plumber/system"
 )
 
-func lambdaFromBin(path string) plumber.Lambda {
-	return func(s plumber.State, input interface{}) (interface{}, error) {
-		all, err := s.All()
-		if err != nil {
-			return nil, err
-		}
-		bs, err := json.Marshal(all)
-		if err != nil {
-			return nil, err
-		}
-		c := exec.Command(path,
-			fmt.Sprintf("\"%s\"", string(bs)),
-			fmt.Sprintf("\"%v\"", input))
-		output, err := c.Output()
-		if err != nil {
-			return nil, err
-		}
-		//TODO: should update state cause based on the contract updated fileds are in output
-		return string(output), nil
-	}
-}
-
 type Stream struct {
 	Type string                 `json:"type"`
 	Args map[string]interface{} `json:"args"`
 }
+
 type Checkpoint struct {
 	Type string                 `json:"type"`
 	Args map[string]interface{} `json:"args"`
 }
+
 type State struct {
 	Type string                 `json:"type"`
 	Args map[string]interface{} `json:"args"`
+}
+
+type Pipe struct {
+	Path       string `json:"path"`
+	NeedsState bool   `json:"needs_state"`
 }
 
 type config struct {
@@ -55,7 +39,7 @@ type config struct {
 	To         *Stream     `json:"to"`
 	Checkpoint *Checkpoint `json:"checkpoint"`
 	State      *State      `json:"state"`
-	Pipeline   []string    `json:"pipeline"`
+	Pipeline   []*Pipe     `json:"pipeline"`
 }
 
 func (c *config) toStream() (plumber.Stream, error) {
@@ -138,7 +122,7 @@ func main() {
 	// configure pipes
 	pipes := []plumber.Lambda{}
 	for _, p := range c.Pipeline {
-		pipes = append(pipes, lambdaFromBin(p))
+		pipes = append(pipes, plumber.LambdaFromExecutable(p.Path, p.NeedsState))
 	}
 	s.Thens(pipes...)
 

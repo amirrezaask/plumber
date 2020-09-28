@@ -1,5 +1,11 @@
 package plumber
 
+import (
+	"encoding/json"
+	"fmt"
+	"os/exec"
+)
+
 //Stream
 type Stream interface {
 	LoadState(map[string]interface{})
@@ -37,6 +43,35 @@ type State interface {
 
 // Lambda is a stateful function
 type Lambda func(state State, input interface{}) (interface{}, error)
+
+//lambdaFromBin creats a lambda from given pipe object.
+func LambdaFromExecutable(path string, needsState bool) Lambda {
+	return func(s State, input interface{}) (interface{}, error) {
+		all, err := s.All()
+		if err != nil {
+			return nil, err
+		}
+		bs, err := json.Marshal(all)
+		if err != nil {
+			return nil, err
+		}
+
+		args := []string{}
+		if needsState {
+			args = append(args, fmt.Sprintf("\"%s\"", string(bs)))
+		}
+		args = append(args, fmt.Sprintf("\"%v\"", input))
+
+		c := exec.Command(path, args...)
+
+		output, err := c.Output()
+		if err != nil {
+			return nil, err
+		}
+		//TODO: should update state cause based on the contract updated fileds are in output
+		return string(output), nil
+	}
+}
 
 //Checkpoints for fault tolerant system.
 type Checkpoint func(System)

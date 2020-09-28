@@ -28,6 +28,13 @@
         }
     },
     "pipeline": [
-        "bin1", "bin2"
+        {
+            "path": "grep awesome",
+            "needs_state": false
+        },
+        {
+            "path": "our bin",
+            "needs_state": true
+        }
     ]
 }
