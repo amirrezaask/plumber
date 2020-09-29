@@ -2,7 +2,7 @@
     "from": {
         "type": "array",
         "args": {
-            "words": ["amirreza", "mamad", "parsa"]
+            "words": ["amirreza"]
         }
     },
     "to": {
