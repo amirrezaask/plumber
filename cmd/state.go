@@ -18,3 +18,6 @@ func redisFromConfig(c map[string]interface{}) (plumber.State, error) {
 	}
 	return s, nil
 }
+func mapFromConfig(c map[string]interface{}) (plumber.State, error) {
+	return state.NewMapState(), nil
+}

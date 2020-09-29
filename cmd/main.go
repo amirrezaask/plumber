@@ -71,6 +71,8 @@ func (c *config) state() (plumber.State, error) {
 	switch c.State.Type {
 	case "redis":
 		return redisFromConfig(c.State.Args)
+	case "map":
+		return mapFromConfig(c.State.Args)
 	default:
 		return nil, errors.New("not found")
 	}
