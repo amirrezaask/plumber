@@ -28,6 +28,10 @@
         {
             "path": "echo",
             "needs_state": false
+        },
+        {
+            "path": "cowsay",
+            "needs_state": false
         }
     ]
 }
