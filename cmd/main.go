@@ -45,9 +45,11 @@ type config struct {
 func (c *config) toStream() (plumber.Stream, error) {
 	switch c.To.Type {
 	case "nats":
-		return natsFromConfig(c.From.Args)
+		return natsFromConfig(c.To.Args)
 	case "nats-streaming":
-		return natsStreamingFromConfig(c.From.Args)
+		return natsStreamingFromConfig(c.To.Args)
+	case "printer":
+		return printerStreamFromConfig(c.To.Args)
 	default:
 		return nil, errors.New("not found")
 	}
@@ -58,6 +60,8 @@ func (c *config) fromStream() (plumber.Stream, error) {
 		return natsFromConfig(c.From.Args)
 	case "nats-streaming":
 		return natsStreamingFromConfig(c.From.Args)
+	case "array":
+		return arrayStreamFromConfig(c.From.Args)
 	default:
 		return nil, errors.New("not found")
 	}

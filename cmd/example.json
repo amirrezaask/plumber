@@ -1,16 +1,13 @@
 {
     "from": {
-        "type": "nats-streaming",
+        "type": "array",
         "args": {
-            "url": "localhost:4222",
-            "subject": "plumber"
+            "words": ["amirreza", "mamad", "parsa"]
         }
     },
     "to": {
-        "type": "nats-streaming",
+        "type": "printer",
         "args": {
-            "url": "localhost:4222",
-            "subject": "plumber-out"
         }
     },
     "checkpoint": {
@@ -29,12 +26,8 @@
     },
     "pipeline": [
         {
-            "path": "grep awesome",
+            "path": "echo",
             "needs_state": false
-        },
-        {
-            "path": "our bin",
-            "needs_state": true
         }
     ]
 }

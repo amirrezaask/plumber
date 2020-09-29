@@ -17,6 +17,7 @@ type NatsStreaming struct {
 	currentEvent uint64
 }
 
+//TODO: update according to StreamConstructor
 func NewNatsStreaming(url string, subject string,
 	clusterID string, clientID string, options ...stan.Option) (plumber.Stream, error) {
 	nc, err := nats.Connect(url)

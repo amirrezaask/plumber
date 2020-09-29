@@ -12,6 +12,12 @@ var natsStreamingRequiredKeys = [...]string{
 }
 var natsRequiredKeys = [...]string{}
 
+func printerStreamFromConfig(c map[string]interface{}) (plumber.Stream, error) {
+	return stream.NewPrinterStream()
+}
+func arrayStreamFromConfig(c map[string]interface{}) (plumber.Stream, error) {
+	return stream.NewArrayStream(c["words"].([]interface{})...)
+}
 func natsStreamingFromConfig(c map[string]interface{}) (plumber.Stream, error) {
 	for _, k := range natsStreamingRequiredKeys {
 		v := c[k]

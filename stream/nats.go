@@ -13,6 +13,7 @@ type Nats struct {
 	readChan chan interface{}
 }
 
+//TODO: update according to stream constructor.
 func NewNats(url string, subject string, options ...nats.Option) (plumber.Stream, error) {
 	conn, err := nats.Connect(url, options...)
 	if err != nil {

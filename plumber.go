@@ -6,6 +6,8 @@ import (
 	"os/exec"
 )
 
+type Opts map[string]interface{}
+
 //Stream
 type Stream interface {
 	LoadState(map[string]interface{})
@@ -43,6 +45,9 @@ type State interface {
 
 // Lambda is a stateful function
 type Lambda func(state State, input interface{}) (interface{}, error)
+
+//StreamConstructor is just a contract for all Streams to agree on.
+type StreamConstrcutor func(opts map[string]interface{}) (Stream, error)
 
 //lambdaFromBin creats a lambda from given pipe object.
 func LambdaFromExecutable(path string, needsState bool) Lambda {

@@ -7,6 +7,7 @@ type ChanStream struct {
 	readChan chan interface{}
 }
 
+//TODO: update according to stream constructor
 func NewChanStream() plumber.Stream {
 	st := &ChanStream{c: make(chan interface{}), readChan: make(chan interface{})}
 	st.StartReading()
