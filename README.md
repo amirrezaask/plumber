@@ -24,11 +24,11 @@ Streams are the way we move data around. Streams are the input and output of our
 - Nats
 - Nats-Streaming
 - Channel
-## Lambda 
-Lambdas are pure functions that get the state and an input and return some output. Remember that since lambas get runned using Goroutiens you can block in them so you can do any 
+## Pipe 
+Pipes are pure functions that get the state and an input and return some output. Remember that since Pipes get runned using Goroutiens you can block in them so you can do any 
 kind of event buckets in them. ( Similar to Windows in ApacheFlink)
-## System 
-System is where our lambdas are glued together and state is being handled as a single application with input and output.
+## Pipeline 
+Pipeline is where our pipes are glued together and state is being handled as a single application with input and output.
 
 # Usage
 ## As a library
@@ -47,7 +47,7 @@ import (
 	"github.com/amirrezaask/plumber/checkpoint"
 	"github.com/amirrezaask/plumber/state"
 	"github.com/amirrezaask/plumber/stream"
-	"github.com/amirrezaask/plumber/system"
+	"github.com/amirrezaask/plumber/pipeline"
 )
 
 func toLower(state plumber.State, value interface{}) (interface{}, error) {
@@ -102,7 +102,7 @@ func main() {
 		panic(err)
 	}
 	//create our plumber pipeline
-	errs, err := system.
+	errs, err := pipeline.
 		NewDefaultSystem().
 		SetCheckpoint(checkpoint.WithInterval(time.Second * 1)).
 		SetState(r).
