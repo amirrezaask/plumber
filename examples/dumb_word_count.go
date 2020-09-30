@@ -8,9 +8,9 @@ import (
 
 	"github.com/amirrezaask/plumber"
 	"github.com/amirrezaask/plumber/checkpoint"
+	"github.com/amirrezaask/plumber/pipeline"
 	"github.com/amirrezaask/plumber/state"
 	"github.com/amirrezaask/plumber/stream"
-	"github.com/amirrezaask/plumber/system"
 )
 
 func toLower(state plumber.State, value interface{}) (interface{}, error) {
@@ -65,7 +65,7 @@ func main() {
 		panic(err)
 	}
 	//create our plumber pipeline
-	errs, err := system.
+	errs, err := pipeline.
 		NewDefaultSystem().
 		SetCheckpoint(checkpoint.WithInterval(time.Second * 1)).
 		SetState(r).

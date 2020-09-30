@@ -1,4 +1,4 @@
-package system
+package pipeline
 
 import (
 	"github.com/amirrezaask/plumber"
@@ -6,18 +6,18 @@ import (
 )
 
 type lamdaContainer struct {
-	l   plumber.Lambda
+	l   plumber.Pipe
 	In  plumber.Stream
 	Out plumber.Stream
 }
-type SystemConfigurer func(s plumber.System) plumber.System
+type SystemConfigurer func(s plumber.Pipeline) plumber.Pipeline
 
 type defaultSystem struct {
 	name       string
 	errs       chan error
 	checkpoint plumber.Checkpoint
 	state      plumber.State
-	nodes      []plumber.Lambda
+	nodes      []plumber.Pipe
 	in         plumber.Stream
 	out        plumber.Stream
 }
@@ -29,7 +29,7 @@ func (s *defaultSystem) Checkpoint() {
 	s.checkpoint(s)
 }
 
-func (s *defaultSystem) SetCheckpoint(c plumber.Checkpoint) plumber.System {
+func (s *defaultSystem) SetCheckpoint(c plumber.Checkpoint) plumber.Pipeline {
 	s.checkpoint = c
 	return s
 }
@@ -42,21 +42,21 @@ func (s *defaultSystem) State() plumber.State {
 	return s.state
 }
 
-func (s *defaultSystem) SetState(st plumber.State) plumber.System {
+func (s *defaultSystem) SetState(st plumber.State) plumber.Pipeline {
 	s.state = st
 	return s
 }
 
-func (s *defaultSystem) Then(l plumber.Lambda) plumber.System {
+func (s *defaultSystem) Then(l plumber.Pipe) plumber.Pipeline {
 	s.nodes = append(s.nodes, l)
 	return s
 }
-func (s *defaultSystem) Thens(ls ...plumber.Lambda) plumber.System {
+func (s *defaultSystem) Thens(ls ...plumber.Pipe) plumber.Pipeline {
 	s.nodes = append(s.nodes, ls...)
 	return s
 }
 
-func (s *defaultSystem) From(st plumber.Stream) plumber.System {
+func (s *defaultSystem) From(st plumber.Stream) plumber.Pipeline {
 	s.in = st
 	return s
 }
@@ -73,7 +73,7 @@ func (s *defaultSystem) UpdateState() error {
 	return nil
 }
 
-func (s *defaultSystem) To(st plumber.Stream) plumber.System {
+func (s *defaultSystem) To(st plumber.Stream) plumber.Pipeline {
 	s.out = st
 	return s
 }
@@ -149,12 +149,12 @@ func (s *defaultSystem) Initiate() (chan error, error) {
 	return errs, nil
 }
 
-func setDefaultSystemConfigs(s plumber.System) plumber.System {
+func setDefaultSystemConfigs(s plumber.Pipeline) plumber.Pipeline {
 	return s
 }
-func NewDefaultSystem(confs ...SystemConfigurer) plumber.System {
+func NewDefaultSystem(confs ...SystemConfigurer) plumber.Pipeline {
 	confs = append(confs, setDefaultSystemConfigs)
-	var s plumber.System
+	var s plumber.Pipeline
 	s = &defaultSystem{}
 	for _, c := range confs {
 		s = c(s)

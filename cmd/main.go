@@ -11,7 +11,7 @@ import (
 
 	"github.com/amirrezaask/plumber"
 	"github.com/amirrezaask/plumber/checkpoint"
-	"github.com/amirrezaask/plumber/system"
+	"github.com/amirrezaask/plumber/pipeline"
 )
 
 type Stream struct {
@@ -100,7 +100,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	s := system.NewDefaultSystem()
+	s := pipeline.NewDefaultSystem()
 	// configure from stream
 	from, err := c.fromStream()
 	if err != nil {
@@ -126,9 +126,9 @@ func main() {
 	}
 	s.SetCheckpoint(chpt)
 	// configure pipes
-	pipes := []plumber.Lambda{}
+	pipes := []plumber.Pipe{}
 	for _, p := range c.Pipeline {
-		pipes = append(pipes, plumber.LambdaFromExecutable(p.Path, p.NeedsState))
+		pipes = append(pipes, plumber.PipeFromExecutable(p.Path, p.NeedsState))
 	}
 	s.Thens(pipes...)
 

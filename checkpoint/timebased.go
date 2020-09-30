@@ -7,7 +7,7 @@ import (
 )
 
 func WithInterval(d time.Duration) plumber.Checkpoint {
-	return func(s plumber.System) {
+	return func(s plumber.Pipeline) {
 		for range time.Tick(d) {
 			s.UpdateState()
 			s.State().Flush()

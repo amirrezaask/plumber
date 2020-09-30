@@ -18,19 +18,19 @@ type Stream interface {
 	Name() string
 }
 
-// System
-type System interface {
+//Pipeline
+type Pipeline interface {
 	UpdateState() error
 	Errors() chan error
-	SetCheckpoint(Checkpoint) System
+	SetCheckpoint(Checkpoint) Pipeline
 	Checkpoint()
 	Name() string
 	State() State
-	SetState(State) System
-	Then(Lambda) System
-	Thens(...Lambda) System
-	From(Stream) System
-	To(Stream) System
+	SetState(State) Pipeline
+	Then(Pipe) Pipeline
+	Thens(...Pipe) Pipeline
+	From(Stream) Pipeline
+	To(Stream) Pipeline
 	Initiate() (chan error, error)
 }
 
@@ -44,14 +44,14 @@ type State interface {
 	Flush() error
 }
 
-// Lambda is a stateful function
-type Lambda func(state State, input interface{}) (interface{}, error)
+// Pipe is a stateful function
+type Pipe func(state State, input interface{}) (interface{}, error)
 
 //StreamConstructor is just a contract for all Streams to agree on.
 type StreamConstrcutor func(opts map[string]interface{}) (Stream, error)
 
-//lambdaFromBin creats a lambda from given pipe object.
-func LambdaFromExecutable(path string, needsState bool) Lambda {
+//PipeFromBin creats a Pipe from given pipe object.
+func PipeFromExecutable(path string, needsState bool) Pipe {
 	return func(s State, input interface{}) (interface{}, error) {
 		all, err := s.All()
 		if err != nil {
@@ -79,5 +79,5 @@ func LambdaFromExecutable(path string, needsState bool) Lambda {
 	}
 }
 
-//Checkpoints for fault tolerant system.
-type Checkpoint func(System)
+//Checkpoints for fault tolerant Pipeline.
+type Checkpoint func(Pipeline)
