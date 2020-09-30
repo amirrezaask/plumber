@@ -2,13 +2,14 @@
 Plumber is a framework for creating data pipelines and stream processing tools.
 
 # Goals
-- Simple 
-- extensible
-- stateful ( both computation state and input stream position )
-- Config-based approach - create stream processor using just JSON config.
-- cluster support (runners manage execution and data partioning)
-- fault tolerance (multiple checkpoint strategies)
-- multiple strategies for handling failures ( at most once, at least once, exactly once (actually exactly once affect state))
+- Simple [WIP] 
+- extensible [DONE]
+- Event buckets [DONE]
+- stateful ( both computation state and input stream position ) [DONE]
+- Config-based approach - create stream processor using just JSON config. [DONE]
+- cluster support (runners manage execution and data partioning) [TBA]
+- fault tolerance (multiple checkpoint strategies) [WIP]
+- multiple strategies for handling failures ( at most once, at least once, exactly once (actually exactly once affect state)) [WIP]
 
 # Terminology
 ## Checkpoint
@@ -24,7 +25,8 @@ Streams are the way we move data around. Streams are the input and output of our
 - Nats-Streaming
 - Channel
 ## Lambda 
-Lambdas are pure functions that get the state and an input and return some output.
+Lambdas are pure functions that get the state and an input and return some output. Remember that since lambas get runned using Goroutiens you can block in them so you can do any 
+kind of event buckets in them. ( Similar to Windows in ApacheFlink)
 ## System 
 System is where our lambdas are glued together and state is being handled as a single application with input and output.
 

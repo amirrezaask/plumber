@@ -35,6 +35,7 @@ type System interface {
 }
 
 //Each state backend should implement this.
+//TODO: state should have some kind of initial value registeration
 type State interface {
 	Set(key string, value interface{}) error
 	GetInt(key string) (int, error)
