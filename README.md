@@ -14,6 +14,7 @@ Plumber is a framework for creating data pipelines and stream processing tools.
 # Terminology
 ## Checkpoint
 Checkpoints run under special circumstances and backup current state of system. 
+- TimeBased
 ## State
 Backends for our stateful processor.
 - Redis
@@ -24,6 +25,10 @@ Streams are the way we move data around. Streams are the input and output of our
 - Nats
 - Nats-Streaming
 - Channel
+- HTTP
+- File
+- Printer
+- Array
 ## Pipe 
 Pipes are pure functions that get the state and an input and return some output. Remember that since Pipes get runned using Goroutiens you can block in them so you can do any 
 kind of event buckets in them. ( Similar to Windows in ApacheFlink)
