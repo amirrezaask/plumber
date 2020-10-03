@@ -5,9 +5,8 @@ type Opts map[string]interface{}
 //Stream
 type Stream interface {
 	LoadState(map[string]interface{})
-	Write(interface{}) error
-	StartReading() error
-	ReadChan() chan interface{}
+	Input() <-chan interface{}
+	Output() chan<- interface{}
 	State() map[string]interface{}
 	Name() string
 }
@@ -26,6 +25,8 @@ type Pipeline interface {
 	From(Stream) Pipeline
 	To(Stream) Pipeline
 	Initiate() (chan error, error)
+	InputStream() Stream
+	OutputStream() Stream
 }
 
 //Each state backend should implement this.
@@ -38,8 +39,15 @@ type State interface {
 	Flush() error
 }
 
+//PipeCtx is the only way a pipe can talk to outside world.
+type PipeCtx struct {
+	In  <-chan interface{}
+	Out chan<- interface{}
+	Err chan<- error
+}
+
 // Pipe is a stateful function
-type Pipe func(state State, input interface{}) (interface{}, error)
+type Pipe func(PipeCtx)
 
 //StreamConstructor is just a contract for all Streams to agree on.
 type StreamConstrcutor func(opts map[string]interface{}) (Stream, error)

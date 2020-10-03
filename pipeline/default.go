@@ -33,7 +33,12 @@ func (s *defaultSystem) SetCheckpoint(c plumber.Checkpoint) plumber.Pipeline {
 	s.checkpoint = c
 	return s
 }
-
+func (s *defaultSystem) InputStream() plumber.Stream {
+	return s.in
+}
+func (s *defaultSystem) OutputStream() plumber.Stream {
+	return s.out
+}
 func (s *defaultSystem) Name() string {
 	return s.name
 }
@@ -136,14 +141,12 @@ func (s *defaultSystem) Initiate() (chan error, error) {
 			return nil, err
 		}
 		go func(container *lamdaContainer) {
-			for v := range container.In.ReadChan() {
-				v, err := container.l(s.State(), v)
-				if err != nil {
-					errs <- err
-					continue
-				}
-				container.Out.Write(v)
-			}
+			//TODO: Pipe should only be able to change it's own keys.
+			container.l(plumber.PipeCtx{
+				In:  container.In.ReadChan(),
+				Out: container.Out.ReadChan(), //TODO: Fix this
+				Err: errs,
+			})
 		}(lc)
 	}
 	return errs, nil
