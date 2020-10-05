@@ -3,54 +3,48 @@ package stream
 import (
 	"fmt"
 	"net/http"
-
-	"github.com/amirrezaask/plumber"
 )
 
 type HttpStreamRequestToValue func(*http.Request) (interface{}, error)
 
-type httpStream struct {
+type HttpStream struct {
 	readChan       chan interface{}
 	requestToValue HttpStreamRequestToValue
 }
 
-func NewHttpStream(requestToValue HttpStreamRequestToValue) (plumber.Stream, error) {
-	return &httpStream{
+func NewHttpStream(requestToValue HttpStreamRequestToValue) (*HttpStream, error) {
+	s := &HttpStream{
 		readChan:       make(chan interface{}),
 		requestToValue: requestToValue,
-	}, nil
+	}
+
+	return s, nil
 }
 
 //http is stateless we don't need any state.
-func (h *httpStream) LoadState(map[string]interface{}) {
+func (h *HttpStream) LoadState(map[string]interface{}) {
 	return
 }
 
-//Write does not do anything since it's http after all.
-func (h *httpStream) Write(interface{}) error {
-	return nil
-}
-
-//Since http is our input we don't need start a goroutine to read from it.
-func (h *httpStream) StartReading() error {
-	return nil
-}
-
-func (h *httpStream) ReadChan() chan interface{} {
+func (h *HttpStream) Input() chan interface{} {
 	return h.readChan
 }
 
+func (h *HttpStream) Output() chan interface{} {
+	panic("Http stream can only be used as input")
+}
+
 //state is just empty
-func (h *httpStream) State() map[string]interface{} {
+func (h *HttpStream) State() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
-func (h *httpStream) Name() string {
+func (h *HttpStream) Name() string {
 	return "http-stream"
 }
 
 //Handler returns an HTTP handler func that you can use, pushing to stream happens in between before and after functions, you can pass either of them nil if you don't need anything to happen before or after.
-func (h *httpStream) Handler(before http.HandlerFunc, after http.HandlerFunc) func(w http.ResponseWriter, r *http.Request) {
+func (h *HttpStream) Handler(before http.HandlerFunc, after http.HandlerFunc) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if before != nil {
 			before(w, r)

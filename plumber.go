@@ -5,8 +5,8 @@ type Opts map[string]interface{}
 //Stream
 type Stream interface {
 	LoadState(map[string]interface{})
-	Input() <-chan interface{}
-	Output() chan<- interface{}
+	Input() chan interface{}
+	Output() chan interface{}
 	State() map[string]interface{}
 	Name() string
 }

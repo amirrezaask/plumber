@@ -7,23 +7,29 @@ import (
 )
 
 type PrinterStream struct {
+	writeChan chan interface{}
 }
 
 func NewPrinterStream() (plumber.Stream, error) {
-	return &PrinterStream{}, nil
+	p := &PrinterStream{
+		writeChan: make(chan interface{}),
+	}
+	go func() {
+		for v := range p.writeChan {
+			fmt.Printf("Printer:: %s", v)
+		}
+	}()
+	return p, nil
 }
 func (a *PrinterStream) LoadState(map[string]interface{}) {
 	return
 }
-func (a *PrinterStream) Write(v interface{}) error {
-	fmt.Printf("PrinterStream => %v", v)
-	return nil
+func (a *PrinterStream) Output() chan interface{} {
+	return a.writeChan
 }
-func (a *PrinterStream) StartReading() error {
-	return nil
-}
-func (a *PrinterStream) ReadChan() chan interface{} {
-	return nil
+
+func (a *PrinterStream) Input() chan interface{} {
+	panic("printer should be only used as output of pipeline")
 }
 
 func (a *PrinterStream) State() map[string]interface{} {

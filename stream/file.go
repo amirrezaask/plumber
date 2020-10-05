@@ -1,6 +1,7 @@
 package stream
 
 import (
+	"encoding/json"
 	"os"
 
 	"github.com/amirrezaask/plumber"
@@ -11,6 +12,7 @@ type fileStream struct {
 	currentByte  uint64
 	chunksLength uint64
 	readChan     chan interface{}
+	writeChan    chan interface{}
 }
 
 func NewFileStream(path string, chunksLength uint64) (plumber.Stream, error) {
@@ -18,20 +20,14 @@ func NewFileStream(path string, chunksLength uint64) (plumber.Stream, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &fileStream{
+	f := &fileStream{
 		fd:           fd,
 		readChan:     make(chan interface{}),
 		chunksLength: chunksLength,
-	}, nil
-}
-func (f *fileStream) Write(v interface{}) error {
-	_, err := f.fd.Write(v.([]byte))
-	return err
-}
-func (f *fileStream) Name() string {
-	return "file-stream"
-}
-func (f *fileStream) StartReading() error {
+		writeChan:    make(chan interface{}),
+		currentByte:  0,
+	}
+
 	go func() {
 		for {
 			bs := make([]byte, f.chunksLength)
@@ -42,14 +38,39 @@ func (f *fileStream) StartReading() error {
 			f.currentByte += uint64(n)
 			f.readChan <- bs
 		}
+
 	}()
-	return nil
+
+	go func() {
+		for v := range f.writeChan {
+			bs, err := json.Marshal(v)
+			if err != nil {
+				continue
+			}
+			n, err := f.fd.WriteAt(bs, int64(f.currentByte))
+			if err != nil {
+				continue
+			}
+			f.currentByte += uint64(n)
+		}
+	}()
+
+	return f, nil
 }
+func (f *fileStream) Name() string {
+	return "file-stream"
+}
+
 func (f *fileStream) LoadState(s map[string]interface{}) {
 	f.currentByte = s["current_byte"].(uint64)
 }
-func (f *fileStream) ReadChan() chan interface{} {
+
+func (f *fileStream) Input() chan interface{} {
 	return f.readChan
+}
+
+func (f *fileStream) Output() chan interface{} {
+	return f.writeChan
 }
 
 func (f *fileStream) State() map[string]interface{} {

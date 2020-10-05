@@ -8,24 +8,22 @@ type ArrayStream struct {
 }
 
 func NewArrayStream(words ...interface{}) (plumber.Stream, error) {
-	return &ArrayStream{arr: words, readChan: make(chan interface{})}, nil
-}
-
-func (a *ArrayStream) LoadState(map[string]interface{}) {
-	return
-}
-func (a *ArrayStream) Write(v interface{}) error {
-	return nil
-}
-func (a *ArrayStream) StartReading() error {
+	a := &ArrayStream{arr: words, readChan: make(chan interface{})}
 	go func() {
 		for _, e := range a.arr {
 			a.readChan <- e
 		}
 	}()
-	return nil
+	return a, nil
 }
-func (a *ArrayStream) ReadChan() chan interface{} {
+
+func (a *ArrayStream) LoadState(map[string]interface{}) {
+	return
+}
+func (a *ArrayStream) Output() chan interface{} {
+	panic("Array stream should only be used for intput")
+}
+func (a *ArrayStream) Input() chan interface{} {
 	return a.readChan
 }
 

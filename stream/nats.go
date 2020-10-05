@@ -2,55 +2,65 @@ package stream
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/amirrezaask/plumber"
 	"github.com/nats-io/nats.go"
 )
 
 type Nats struct {
-	nc       *nats.Conn
-	subject  string
-	readChan chan interface{}
+	nc           *nats.Conn
+	currentEvent uint64
+	readSubject  string
+	writeSubject string
+	readChan     chan interface{}
+	writeChan    chan interface{}
 }
 
 //TODO: update according to stream constructor.
-func NewNats(url string, subject string, options ...nats.Option) (plumber.Stream, error) {
+func NewNats(url string, readSubject string, writeSubject string, options ...nats.Option) (plumber.Stream, error) {
 	conn, err := nats.Connect(url, options...)
 	if err != nil {
 		return nil, err
 	}
-	return &Nats{
-		nc:       conn,
-		subject:  subject,
-		readChan: make(chan interface{}),
-	}, nil
+	n := &Nats{
+		nc:           conn,
+		readSubject:  readSubject,
+		writeSubject: writeSubject,
+		readChan:     make(chan interface{}),
+		writeChan:    make(chan interface{}),
+	}
+	n.nc.Subscribe(readSubject, func(msg *nats.Msg) {
+		n.currentEvent++
+		n.readChan <- msg.Data
+	})
+	go func() {
+		for v := range n.writeChan {
+			bs, err := json.Marshal(v)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			err = n.nc.Publish(n.writeSubject, bs)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+		}
+	}()
+	return n, nil
 }
 func (n *Nats) State() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
-func (n *Nats) ReadChan() chan interface{} {
+func (n *Nats) Output() chan interface{} {
+	return n.readChan
+}
+func (n *Nats) Input() chan interface{} {
 	return n.readChan
 }
 func (n *Nats) Name() string {
 	return "NATS"
 }
 func (n *Nats) LoadState(s map[string]interface{}) {}
-
-func (n *Nats) StartReading() error {
-	_, err := n.nc.Subscribe(n.subject, func(m *nats.Msg) {
-		n.readChan <- string(m.Data)
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (n *Nats) Write(v interface{}) error {
-	bs, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-	return n.nc.Publish(n.subject, bs)
-}
