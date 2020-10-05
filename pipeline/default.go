@@ -5,10 +5,9 @@ import (
 	"github.com/amirrezaask/plumber/stream"
 )
 
-type lamdaContainer struct {
-	l   plumber.Pipe
-	In  plumber.Stream
-	Out plumber.Stream
+type container struct {
+	pipeCtx *plumber.PipeCtx
+	pipe    plumber.Pipe
 }
 type SystemConfigurer func(s plumber.Pipeline) plumber.Pipeline
 
@@ -100,30 +99,25 @@ func (s *defaultSystem) Initiate() (chan error, error) {
 	if outState != nil {
 		s.out.LoadState(outState.(map[string]interface{}))
 	}
-	// start input stream
-	err = s.in.StartReading()
-
 	// connect lambdas through channels
-	var lcs []*lamdaContainer
+	var lcs []*container
 	if err != nil {
 		return nil, err
 	}
 	for idx, n := range s.nodes {
-		lc := &lamdaContainer{}
-		lc.l = n
+		lc := &container{
+			pipeCtx: &plumber.PipeCtx{},
+		}
+		lc.pipe = n
 		if idx == 0 {
-			lc.In = s.in
+			lc.pipeCtx.In = s.in.Input()
 		} else {
-			lc.In = lcs[idx-1].Out
+			lc.pipeCtx.In = lcs[idx-1].pipeCtx.Out
 		}
 		if idx == len(s.nodes)-1 {
-			lc.Out = s.out
+			lc.pipeCtx.Out = s.OutputStream().Output()
 		} else {
-			lc.Out = stream.NewChanStream()
-			err = lc.Out.StartReading()
-			if err != nil {
-				return nil, err
-			}
+			lc.pipeCtx.Out = stream.NewChanStream().Output()
 		}
 		lcs = append(lcs, lc)
 	}
@@ -136,17 +130,9 @@ func (s *defaultSystem) Initiate() (chan error, error) {
 		errs <- err
 	}
 	for _, lc := range lcs {
-		err := lc.In.StartReading()
-		if err != nil {
-			return nil, err
-		}
-		go func(container *lamdaContainer) {
+		go func(container *container) {
 			//TODO: Pipe should only be able to change it's own keys.
-			container.l(plumber.PipeCtx{
-				In:  container.In.ReadChan(),
-				Out: container.Out.ReadChan(), //TODO: Fix this
-				Err: errs,
-			})
+			container.pipe(container.pipeCtx)
 		}(lc)
 	}
 	return errs, nil

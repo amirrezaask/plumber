@@ -41,13 +41,14 @@ type State interface {
 
 //PipeCtx is the only way a pipe can talk to outside world.
 type PipeCtx struct {
-	In  <-chan interface{}
-	Out chan<- interface{}
-	Err chan<- error
+	State State
+	In    chan interface{}
+	Out   chan interface{}
+	Err   chan error
 }
 
 // Pipe is a stateful function
-type Pipe func(PipeCtx)
+type Pipe func(*PipeCtx)
 
 //StreamConstructor is just a contract for all Streams to agree on.
 type StreamConstrcutor func(opts map[string]interface{}) (Stream, error)
