@@ -13,30 +13,32 @@ import (
 	"github.com/amirrezaask/plumber/stream"
 )
 
-func toLower(state plumber.State, value interface{}) (interface{}, error) {
-	word := value.(string)
+func toLower(ctx *plumber.PipeCtx) {
+	word := (<-ctx.In).(string)
 	word = strings.ToLower(word)
-	return word, nil
+	ctx.Out <- word
 }
 
-func toUpper(state plumber.State, value interface{}) (interface{}, error) {
-	word := value.(string)
+func toUpper(ctx *plumber.PipeCtx) {
+	word := (<-ctx.In).(string)
 	word = strings.ToUpper(word)
-	return word, nil
+	ctx.Out <- word
 }
 
-func count(state plumber.State, input interface{}) (interface{}, error) {
-	word := input.(string)
-	counter, err := state.GetInt(string(word))
+func count(ctx *plumber.PipeCtx) {
+	word := (<-ctx.In).(string)
+	counter, err := ctx.State.GetInt(string(word))
 	if err != nil {
-		return nil, err
+		ctx.Err <- err
+		return
 	}
 	counter = counter + 1
-	err = state.Set(string(word), counter)
+	err = ctx.State.Set(string(word), counter)
 	if err != nil {
-		return nil, err
+		ctx.Err <- err
+		return
 	}
-	return word, nil
+	ctx.Out <- word
 }
 func main() {
 	// input, err := stream.NewNatsStreaming("localhost:4222", "plumber", "clusterID", "thisclient")
@@ -48,13 +50,13 @@ func main() {
 	// feed some data into our input stream
 	go func() {
 		for {
-			input.Write("This Is tHe eNd")
+			input.Output() <- "salam"
 		}
 	}()
 	output := stream.NewChanStream()
 	//consume our output data
 	go func() {
-		for v := range output.ReadChan() {
+		for v := range output.Input() {
 			if v != nil {
 				fmt.Println(v)
 			}
