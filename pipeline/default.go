@@ -1,6 +1,8 @@
 package pipeline
 
 import (
+	"fmt"
+
 	"github.com/amirrezaask/plumber"
 	"github.com/amirrezaask/plumber/stream"
 )
@@ -125,13 +127,10 @@ func (s *defaultSystem) Initiate() (chan error, error) {
 
 	//start checkpoint process
 	go s.Checkpoint()
-
-	if err != nil {
-		errs <- err
-	}
 	for _, lc := range lcs {
 		go func(container *container) {
-			//TODO: Pipe should only be able to change it's own keys.
+			fmt.Println("oomadam Inja")
+			container.pipeCtx.Err = errs
 			container.pipe(container.pipeCtx)
 		}(lc)
 	}

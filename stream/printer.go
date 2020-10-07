@@ -10,7 +10,7 @@ type PrinterStream struct {
 	writeChan chan interface{}
 }
 
-func NewPrinterStream() (plumber.Stream, error) {
+func NewPrinterStream() plumber.Stream {
 	p := &PrinterStream{
 		writeChan: make(chan interface{}),
 	}
@@ -19,7 +19,7 @@ func NewPrinterStream() (plumber.Stream, error) {
 			fmt.Printf("Printer:: %s", v)
 		}
 	}()
-	return p, nil
+	return p
 }
 func (a *PrinterStream) LoadState(map[string]interface{}) {
 	return

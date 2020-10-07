@@ -7,14 +7,14 @@ type ArrayStream struct {
 	readChan chan interface{}
 }
 
-func NewArrayStream(words ...interface{}) (plumber.Stream, error) {
+func NewArrayStream(words ...interface{}) plumber.Stream {
 	a := &ArrayStream{arr: words, readChan: make(chan interface{})}
 	go func() {
 		for _, e := range a.arr {
 			a.readChan <- e
 		}
 	}()
-	return a, nil
+	return a
 }
 
 func (a *ArrayStream) LoadState(map[string]interface{}) {

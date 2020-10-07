@@ -41,27 +41,7 @@ func count(ctx *plumber.PipeCtx) {
 	ctx.Out <- word
 }
 func main() {
-	// input, err := stream.NewNatsStreaming("localhost:4222", "plumber", "clusterID", "thisclient")
-	// input, err := stream.NewNats("localhost:4222", "plumber")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	input := stream.NewChanStream()
-	// feed some data into our input stream
-	go func() {
-		for {
-			input.Output() <- "salam"
-		}
-	}()
-	output := stream.NewChanStream()
-	//consume our output data
-	go func() {
-		for v := range output.Input() {
-			if v != nil {
-				fmt.Println(v)
-			}
-		}
-	}()
+
 	r, err := state.NewRedis(context.Background(), "localhost", "6379", "", "", 0)
 	if err != nil {
 		panic(err)
@@ -71,13 +51,11 @@ func main() {
 		NewDefaultSystem().
 		SetCheckpoint(checkpoint.WithInterval(time.Second * 1)).
 		SetState(r).
-		//SetState(state.NewBolt())
-		// SetState(state.NewMapState()).
-		From(input).
+		From(stream.NewArrayStream("amirreza", "parsa")).
 		Then(toLower).
 		Then(toUpper).
 		Then(count).
-		To(output).
+		To(stream.NewPrinterStream()).
 		Initiate()
 	if err != nil {
 		panic(err)

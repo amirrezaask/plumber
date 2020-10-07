@@ -1,6 +1,10 @@
 package stream
 
-import "github.com/amirrezaask/plumber"
+import (
+	"fmt"
+
+	"github.com/amirrezaask/plumber"
+)
 
 type ChanStream struct {
 	c         chan interface{}
@@ -19,6 +23,7 @@ func NewChanStream() plumber.Stream {
 
 	go func() {
 		for v := range st.writeChan {
+			fmt.Println("Recv ", v)
 			st.c <- v
 		}
 	}()
