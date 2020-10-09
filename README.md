@@ -37,6 +37,11 @@ Streams are the way we move data around. Streams are the input and output of our
 Pipes are pure functions that get the state and an input and return some output. Remember that since Pipes get runned using Goroutiens you can block in them so you can do any 
 kind of event buckets in them. ( Similar to Windows in ApacheFlink, see pipe/window.go)
 
+### Window
+Windows are a specific type of pipes that can block data flow and release a buffer of events based on various logics such as:
+- TimeWindow: Using a time.Ticker, buffer events and release the buffer with the time interval given.
+- CountWindow: Release buffer of events when it reaches a certain length. 
+- SignalWindow: Release buffer of events based on a signal
 ## Pipeline 
 Pipeline is where our pipes are glued together and state is being handled as a single application with input and output.
 
