@@ -8,17 +8,15 @@ import (
 
 	"github.com/amirrezaask/plumber"
 	"github.com/amirrezaask/plumber/checkpoint"
+	"github.com/amirrezaask/plumber/pipe"
 	"github.com/amirrezaask/plumber/pipeline"
 	"github.com/amirrezaask/plumber/state"
 	"github.com/amirrezaask/plumber/stream"
 )
 
-func toLower(ctx *plumber.PipeCtx) {
-	for {
-		word := (<-ctx.In).(string)
-		word = strings.ToLower(word)
-		ctx.Out <- word
-	}
+func toLower(s plumber.State, i interface{}) (interface{}, error) {
+	word := strings.ToLower(i.(string))
+	return word, nil
 }
 
 func toUpper(ctx *plumber.PipeCtx) {
@@ -59,7 +57,7 @@ func main() {
 		SetState(r).
 		From(stream.NewArrayStream("amirreza", "parsa")).
 		Then(toUpper).
-		Then(toLower).
+		Then(pipe.MakePipe(toLower)).
 		Then(count).
 		To(stream.NewPrinterStream()).
 		Initiate()

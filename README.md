@@ -2,9 +2,9 @@
 Plumber is a framework for creating data pipelines and stream processing tools.
 
 # Goals
-- Simple [WIP] 
-- extensible [DONE]
-- Event buckets [DONE]
+- Simple [x] 
+- extensible [x]
+- Event buckets [x]
 - stateful ( both computation state and input stream position ) [DONE]
 - Config-based approach - create stream processor using just JSON config. [DONE]
 - cluster support (runners manage execution and data partioning) [TBA]
@@ -170,4 +170,3 @@ Example configuration:
 
 ## TODO
 - Standardize Stream constructors so we don't need to explicily name them in our command line tool.
-
