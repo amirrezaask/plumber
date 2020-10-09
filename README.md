@@ -12,14 +12,17 @@ Plumber is a framework for creating data pipelines and stream processing tools.
 - multiple strategies for handling failures ( at most once, at least once, exactly once (actually exactly once affect state)) [WIP]
 
 # Terminology
+
 ## Checkpoint
 Checkpoints run under special circumstances and backup current state of system. 
 - TimeBased
+
 ## State
 Backends for our stateful processor.
 - Redis
 - Map
 - Bolt
+
 ## Stream
 Streams are the way we move data around. Streams are the input and output of our application. Streams are stateful and their state is just a part of System state.
 - Nats
@@ -29,9 +32,11 @@ Streams are the way we move data around. Streams are the input and output of our
 - File
 - Printer
 - Array
+
 ## Pipe 
 Pipes are pure functions that get the state and an input and return some output. Remember that since Pipes get runned using Goroutiens you can block in them so you can do any 
-kind of event buckets in them. ( Similar to Windows in ApacheFlink)
+kind of event buckets in them. ( Similar to Windows in ApacheFlink, see pipe/window.go)
+
 ## Pipeline 
 Pipeline is where our pipes are glued together and state is being handled as a single application with input and output.
 
@@ -50,58 +55,44 @@ import (
 
 	"github.com/amirrezaask/plumber"
 	"github.com/amirrezaask/plumber/checkpoint"
+	"github.com/amirrezaask/plumber/pipe"
+	"github.com/amirrezaask/plumber/pipeline"
 	"github.com/amirrezaask/plumber/state"
 	"github.com/amirrezaask/plumber/stream"
-	"github.com/amirrezaask/plumber/pipeline"
 )
 
-func toLower(state plumber.State, value interface{}) (interface{}, error) {
-	word := value.(string)
-	word = strings.ToLower(word)
+func toLower(s plumber.State, i interface{}) (interface{}, error) {
+	word := strings.ToLower(i.(string))
 	return word, nil
 }
 
-func toUpper(state plumber.State, value interface{}) (interface{}, error) {
-	word := value.(string)
-	word = strings.ToUpper(word)
-	return word, nil
+func toUpper(ctx *plumber.PipeCtx) {
+	for {
+		word := (<-ctx.In).(string)
+		word = strings.ToUpper(word)
+		ctx.Out <- word
+	}
 }
 
-func count(state plumber.State, input interface{}) (interface{}, error) {
-	word := input.(string)
-	counter, err := state.GetInt(string(word))
-	if err != nil {
-		return nil, err
+func count(ctx *plumber.PipeCtx) {
+	for {
+		word := (<-ctx.In).(string)
+		counter, err := ctx.State.GetInt(string(word))
+		if err != nil {
+			ctx.Err <- err
+			return
+		}
+		counter = counter + 1
+		err = ctx.State.Set(string(word), counter)
+		if err != nil {
+			ctx.Err <- err
+			return
+		}
+		ctx.Out <- word
 	}
-	counter = counter + 1
-	err = state.Set(string(word), counter)
-	if err != nil {
-		return nil, err
-	}
-	return word, nil
 }
 func main() {
-	// input, err := stream.NewNatsStreaming("localhost:4222", "plumber", "clusterID", "thisclient")
-	// input, err := stream.NewNats("localhost:4222", "plumber")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	input := stream.NewChanStream()
-	// feed some data into our input stream
-	go func() {
-		for {
-			input.Write("This Is tHe eNd")
-		}
-	}()
-	output := stream.NewChanStream()
-	//consume our output data
-	go func() {
-		for v := range output.ReadChan() {
-			if v != nil {
-				fmt.Println(v)
-			}
-		}
-	}()
+
 	r, err := state.NewRedis(context.Background(), "localhost", "6379", "", "", 0)
 	if err != nil {
 		panic(err)
@@ -111,13 +102,11 @@ func main() {
 		NewDefaultSystem().
 		SetCheckpoint(checkpoint.WithInterval(time.Second * 1)).
 		SetState(r).
-		//SetState(state.NewBolt())
-		// SetState(state.NewMapState()).
-		From(input).
-		Then(toLower).
+		From(stream.NewArrayStream("amirreza", "parsa")).
 		Then(toUpper).
+		Then(pipe.MakePipe(toLower)).
 		Then(count).
-		To(output).
+		To(stream.NewPrinterStream()).
 		Initiate()
 	if err != nil {
 		panic(err)
