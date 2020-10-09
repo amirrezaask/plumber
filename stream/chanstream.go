@@ -1,8 +1,6 @@
 package stream
 
 import (
-	"fmt"
-
 	"github.com/amirrezaask/plumber"
 )
 
@@ -14,7 +12,8 @@ type ChanStream struct {
 
 //TODO: update according to stream constructor
 func NewChanStream() plumber.Stream {
-	st := &ChanStream{c: make(chan interface{}), readChan: make(chan interface{})}
+	st := &ChanStream{c: make(chan interface{}), readChan: make(chan interface{}),
+		writeChan: make(chan interface{})}
 	go func() {
 		for v := range st.c {
 			st.Input() <- v
@@ -23,7 +22,6 @@ func NewChanStream() plumber.Stream {
 
 	go func() {
 		for v := range st.writeChan {
-			fmt.Println("Recv ", v)
 			st.c <- v
 		}
 	}()

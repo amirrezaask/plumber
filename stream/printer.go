@@ -16,7 +16,7 @@ func NewPrinterStream() plumber.Stream {
 	}
 	go func() {
 		for v := range p.writeChan {
-			fmt.Printf("Printer:: %s", v)
+			fmt.Printf("Printer:: %s\n", v)
 		}
 	}()
 	return p

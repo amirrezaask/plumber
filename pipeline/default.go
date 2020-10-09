@@ -1,10 +1,7 @@
 package pipeline
 
 import (
-	"fmt"
-
 	"github.com/amirrezaask/plumber"
-	"github.com/amirrezaask/plumber/stream"
 )
 
 type container struct {
@@ -119,7 +116,7 @@ func (s *defaultSystem) Initiate() (chan error, error) {
 		if idx == len(s.nodes)-1 {
 			lc.pipeCtx.Out = s.OutputStream().Output()
 		} else {
-			lc.pipeCtx.Out = stream.NewChanStream().Output()
+			lc.pipeCtx.Out = make(chan interface{})
 		}
 		lcs = append(lcs, lc)
 	}
@@ -129,8 +126,8 @@ func (s *defaultSystem) Initiate() (chan error, error) {
 	go s.Checkpoint()
 	for _, lc := range lcs {
 		go func(container *container) {
-			fmt.Println("oomadam Inja")
 			container.pipeCtx.Err = errs
+			container.pipeCtx.State = s.State()
 			container.pipe(container.pipeCtx)
 		}(lc)
 	}

@@ -14,31 +14,37 @@ import (
 )
 
 func toLower(ctx *plumber.PipeCtx) {
-	word := (<-ctx.In).(string)
-	word = strings.ToLower(word)
-	ctx.Out <- word
+	for {
+		word := (<-ctx.In).(string)
+		word = strings.ToLower(word)
+		ctx.Out <- word
+	}
 }
 
 func toUpper(ctx *plumber.PipeCtx) {
-	word := (<-ctx.In).(string)
-	word = strings.ToUpper(word)
-	ctx.Out <- word
+	for {
+		word := (<-ctx.In).(string)
+		word = strings.ToUpper(word)
+		ctx.Out <- word
+	}
 }
 
 func count(ctx *plumber.PipeCtx) {
-	word := (<-ctx.In).(string)
-	counter, err := ctx.State.GetInt(string(word))
-	if err != nil {
-		ctx.Err <- err
-		return
+	for {
+		word := (<-ctx.In).(string)
+		counter, err := ctx.State.GetInt(string(word))
+		if err != nil {
+			ctx.Err <- err
+			return
+		}
+		counter = counter + 1
+		err = ctx.State.Set(string(word), counter)
+		if err != nil {
+			ctx.Err <- err
+			return
+		}
+		ctx.Out <- word
 	}
-	counter = counter + 1
-	err = ctx.State.Set(string(word), counter)
-	if err != nil {
-		ctx.Err <- err
-		return
-	}
-	ctx.Out <- word
 }
 func main() {
 
@@ -52,8 +58,8 @@ func main() {
 		SetCheckpoint(checkpoint.WithInterval(time.Second * 1)).
 		SetState(r).
 		From(stream.NewArrayStream("amirreza", "parsa")).
-		Then(toLower).
 		Then(toUpper).
+		Then(toLower).
 		Then(count).
 		To(stream.NewPrinterStream()).
 		Initiate()
