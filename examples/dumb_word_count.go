@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -45,16 +44,16 @@ func count(ctx *plumber.PipeCtx) {
 	}
 }
 func main() {
-
-	r, err := state.NewRedis(context.Background(), "localhost", "6379", "", "", 0)
-	if err != nil {
-		panic(err)
-	}
+	//r, err := state.NewRedis(context.Background(), "localhost", "6379", "", "", 0)
+	s := state.NewMapState()
+	//if err != nil {
+	//	panic(err)
+	//}
 	//create our plumber pipeline
 	errs, err := pipeline.
 		NewDefaultSystem().
 		SetCheckpoint(checkpoint.WithInterval(time.Second * 1)).
-		SetState(r).
+		SetState(s).
 		From(stream.NewArrayStream("amirreza", "parsa")).
 		Then(toUpper).
 		Then(pipe.MakePipe(toLower)).

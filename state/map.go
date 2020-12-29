@@ -23,6 +23,9 @@ func (d *MapState) GetInt(k string) (int, error) {
 	if err != nil {
 		return -1, err
 	}
+	if v == nil {
+		return 0, nil
+	}
 	i, err := strconv.Atoi(v.(string))
 	if err != nil {
 		return -1, err

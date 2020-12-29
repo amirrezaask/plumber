@@ -1,8 +1,5 @@
 package state
 
-
-
-
 import (
 	"context"
 	"fmt"
