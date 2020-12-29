@@ -9,8 +9,15 @@ import (
 func WithInterval(d time.Duration) plumber.Checkpoint {
 	return func(s plumber.Pipeline) {
 		for range time.Tick(d) {
-			s.UpdateState()
-			s.State().Flush()
+			err := s.UpdateState()
+			if err != nil {
+				s.Logger().Error("checkpoint error: %s", err.Error())
+				return
+			}
+			err = s.State().Flush()
+			if err != nil {
+				s.Logger().Error("checkpoint error: %s", err.Error())
+			}
 		}
 	}
 }
