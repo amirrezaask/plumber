@@ -18,6 +18,7 @@ type defaultPipeline struct {
 	nodes      []plumber.Pipe
 	in         plumber.Stream
 	out        plumber.Stream
+	logger     plumber.Logger
 }
 
 func (s *defaultPipeline) Errors() chan error {
@@ -79,6 +80,14 @@ func (s *defaultPipeline) UpdateState() error {
 func (s *defaultPipeline) To(st plumber.Stream) plumber.Pipeline {
 	s.out = st
 	return s
+}
+
+func (s *defaultPipeline) WithLogger(l plumber.Logger) {
+	s.logger = l
+}
+
+func (s *defaultPipeline) Logger() plumber.Logger {
+	return s.logger
 }
 
 func (s *defaultPipeline) Initiate() (chan error, error) {

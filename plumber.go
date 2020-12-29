@@ -13,6 +13,7 @@ type Stream interface {
 
 //Pipeline
 type Pipeline interface {
+	Logger() Logger
 	UpdateState() error
 	Errors() chan error
 	SetCheckpoint(Checkpoint) Pipeline
@@ -27,6 +28,7 @@ type Pipeline interface {
 	Initiate() (chan error, error)
 	InputStream() Stream
 	OutputStream() Stream
+	WithLogger(l Logger)
 }
 
 //Each state backend should implement this.
