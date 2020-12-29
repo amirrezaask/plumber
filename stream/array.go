@@ -1,14 +1,17 @@
 package stream
 
-import "github.com/amirrezaask/plumber"
+import (
+	"github.com/amirrezaask/plumber"
+)
 
-type ArrayStream struct {
+//ArrayInput uses an array to feed data into pipeline.
+type ArrayInput struct {
 	arr      []interface{}
 	readChan chan interface{}
 }
 
-func NewArrayStream(words ...interface{}) plumber.Stream {
-	a := &ArrayStream{arr: words, readChan: make(chan interface{})}
+func NewArrayInput(words ...interface{}) plumber.Input {
+	a := &ArrayInput{arr: words, readChan: make(chan interface{})}
 	go func() {
 		for _, e := range a.arr {
 			a.readChan <- e
@@ -17,20 +20,18 @@ func NewArrayStream(words ...interface{}) plumber.Stream {
 	return a
 }
 
-func (a *ArrayStream) LoadState(map[string]interface{}) {
-	return
-}
-func (a *ArrayStream) Output() chan interface{} {
-	panic("Array stream should only be used for intput")
-}
-func (a *ArrayStream) Input() chan interface{} {
-	return a.readChan
-}
-
-func (a *ArrayStream) State() map[string]interface{} {
+func (a *ArrayInput) LoadState(map[string]interface{}) error {
 	return nil
 }
 
-func (a *ArrayStream) Name() string {
+func (a *ArrayInput) Input() (chan interface{}, error) {
+	return a.readChan, nil
+}
+
+func (a *ArrayInput) State() map[string]interface{} {
+	return nil
+}
+
+func (a *ArrayInput) Name() string {
 	return "array-stream"
 }

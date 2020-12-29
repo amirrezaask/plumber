@@ -1,13 +1,10 @@
 package pipeline
 
 import (
+	"errors"
 	"github.com/amirrezaask/plumber"
 )
 
-type container struct {
-	pipeCtx *plumber.PipeCtx
-	pipe    plumber.Pipe
-}
 type SystemConfigurer func(s plumber.Pipeline) plumber.Pipeline
 
 type defaultPipeline struct {
@@ -16,8 +13,8 @@ type defaultPipeline struct {
 	checkpoint plumber.Checkpoint
 	state      plumber.State
 	nodes      []plumber.Pipe
-	in         plumber.Stream
-	out        plumber.Stream
+	in         plumber.Input
+	out        plumber.Output
 	logger     plumber.Logger
 }
 
@@ -32,10 +29,10 @@ func (s *defaultPipeline) SetCheckpoint(c plumber.Checkpoint) plumber.Pipeline {
 	s.checkpoint = c
 	return s
 }
-func (s *defaultPipeline) InputStream() plumber.Stream {
+func (s *defaultPipeline) GetInputStream() plumber.Input {
 	return s.in
 }
-func (s *defaultPipeline) OutputStream() plumber.Stream {
+func (s *defaultPipeline) GetOutputStream() plumber.Output {
 	return s.out
 }
 func (s *defaultPipeline) Name() string {
@@ -60,7 +57,7 @@ func (s *defaultPipeline) Thens(ls ...plumber.Pipe) plumber.Pipeline {
 	return s
 }
 
-func (s *defaultPipeline) From(st plumber.Stream) plumber.Pipeline {
+func (s *defaultPipeline) From(st plumber.Input) plumber.Pipeline {
 	s.in = st
 	return s
 }
@@ -77,7 +74,7 @@ func (s *defaultPipeline) UpdateState() error {
 	return nil
 }
 
-func (s *defaultPipeline) To(st plumber.Stream) plumber.Pipeline {
+func (s *defaultPipeline) To(st plumber.Output) plumber.Pipeline {
 	s.out = st
 	return s
 }
@@ -102,28 +99,44 @@ func (s *defaultPipeline) Initiate() (chan error, error) {
 		return nil, err
 	}
 	if inState != nil {
-		s.in.LoadState(inState.(map[string]interface{}))
+		err := s.in.LoadState(inState.(map[string]interface{}))
+		if err != nil {
+			return nil, err
+		}
 	}
 	if outState != nil {
-		s.out.LoadState(outState.(map[string]interface{}))
+		err := s.out.LoadState(outState.(map[string]interface{}))
+		if err != nil {
+			return nil, err
+		}
 	}
-	// connect lambdas through channels
+	type container struct {
+		pipeCtx *plumber.PipeCtx
+		pipe    plumber.Pipe
+	}
+
 	var lcs []*container
-	if err != nil {
-		return nil, err
-	}
 	for idx, n := range s.nodes {
 		lc := &container{
 			pipeCtx: &plumber.PipeCtx{},
 		}
 		lc.pipe = n
 		if idx == 0 {
-			lc.pipeCtx.In = s.in.Input()
+			lc.pipeCtx.In, err = s.in.Input()
+			if err != nil {
+				return nil, err
+			}
 		} else {
+			if lcs == nil {
+				return nil, errors.New("error nil lcs array")
+			}
 			lc.pipeCtx.In = lcs[idx-1].pipeCtx.Out
 		}
 		if idx == len(s.nodes)-1 {
-			lc.pipeCtx.Out = s.OutputStream().Output()
+			lc.pipeCtx.Out, err = s.GetOutputStream().Output()
+			if err != nil {
+				return nil, err
+			}
 		} else {
 			lc.pipeCtx.Out = make(chan interface{})
 		}

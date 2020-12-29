@@ -6,12 +6,12 @@ import (
 	"github.com/amirrezaask/plumber"
 )
 
-type PrinterStream struct {
+type PrinterOutput struct {
 	writeChan chan interface{}
 }
 
-func NewPrinterStream() plumber.Stream {
-	p := &PrinterStream{
+func NewPrinterOutput() plumber.Output {
+	p := &PrinterOutput{
 		writeChan: make(chan interface{}),
 	}
 	go func() {
@@ -21,21 +21,19 @@ func NewPrinterStream() plumber.Stream {
 	}()
 	return p
 }
-func (a *PrinterStream) LoadState(map[string]interface{}) {
-	return
-}
-func (a *PrinterStream) Output() chan interface{} {
-	return a.writeChan
-}
 
-func (a *PrinterStream) Input() chan interface{} {
-	panic("printer should be only used as output of pipeline")
-}
-
-func (a *PrinterStream) State() map[string]interface{} {
+func (a *PrinterOutput) LoadState(map[string]interface{}) error {
 	return nil
 }
 
-func (a *PrinterStream) Name() string {
+func (a *PrinterOutput) Output() (chan interface{}, error) {
+	return a.writeChan, nil
+}
+
+func (a *PrinterOutput) State() map[string]interface{} {
+	return nil
+}
+
+func (a *PrinterOutput) Name() string {
 	return "printer-stream"
 }
