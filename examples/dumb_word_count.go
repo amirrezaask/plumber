@@ -29,10 +29,14 @@ func toUpper(ctx *plumber.PipeCtx) {
 func count(ctx *plumber.PipeCtx) {
 	for {
 		word := (<-ctx.In).(string)
-		counter, err := ctx.State.GetInt(string(word))
+		c, err := ctx.State.Get(word)
 		if err != nil {
 			ctx.Err <- err
 			return
+		}
+		counter, ok := c.(int)
+		if !ok {
+			ctx.Logger.Error("state of %s is not an int", word)
 		}
 		counter = counter + 1
 		err = ctx.State.Set(string(word), counter)
@@ -54,11 +58,11 @@ func main() {
 		NewDefaultSystem().
 		SetCheckpoint(checkpoint.WithInterval(time.Second * 1)).
 		SetState(s).
-		From(stream.NewArrayStream("amirreza", "parsa")).
+		From(stream.NewArrayInput("amirreza", "parsa")).
 		Then(toUpper).
 		Then(pipe.MakePipe(toLower)).
 		Then(count).
-		To(stream.NewPrinterStream()).
+		To(stream.NewPrinterOutput()).
 		Initiate()
 	if err != nil {
 		panic(err)

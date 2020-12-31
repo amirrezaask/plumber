@@ -1,8 +1,10 @@
 package plumber
 
+import "io"
+
 type Stream interface {
-	LoadState(map[string]interface{}) error
-	State() map[string]interface{}
+	LoadState(reader io.Reader) error
+	State() ([]byte, error)
 	Name() string
 }
 
