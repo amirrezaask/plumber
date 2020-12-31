@@ -1,5 +1,0 @@
-package state
-
-
-
-func main() {}

@@ -2,6 +2,7 @@ package stream
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 
 	"github.com/amirrezaask/plumber"
@@ -10,18 +11,19 @@ import (
 	"github.com/nats-io/stan.go"
 )
 
-type NatsStreaming struct {
-	sc            stan.Conn
-	readSubject   string
-	writerSubject string
-	writeChan     chan interface{}
-	readChan      chan interface{}
-	currentEvent  uint64
+type NatsStreamingInputState struct {
+	DurableName string
 }
 
-//TODO: update according to StreamConstructor
-func NewNatsStreaming(url string, readSubject string, writeSubject string,
-	clusterID string, clientID string, options ...stan.Option) (plumber.Stream, error) {
+type NatsStreamingInput struct {
+	sc           stan.Conn
+	sub          stan.Subscription
+	readSubject  string
+	readChan     chan interface{}
+	currentEvent uint64
+}
+
+func NewNatsStreamingInput(initialState *NatsStreamingInputState, url string, readSubject string, clusterID string, clientID string, options ...stan.Option) (plumber.Input, error) {
 	nc, err := nats.Connect(url)
 	if err != nil {
 		return nil, err
@@ -35,53 +37,94 @@ func NewNatsStreaming(url string, readSubject string, writeSubject string,
 	if err != nil {
 		return nil, err
 	}
-	n := &NatsStreaming{
-		sc:            sc,
-		readSubject:   readSubject,
-		writerSubject: writeSubject,
-		readChan:      make(chan interface{}),
-		writeChan:     make(chan interface{}),
-		currentEvent:  0,
+	n := &NatsStreamingInput{
+		sc:           sc,
+		readSubject:  readSubject,
+		readChan:     make(chan interface{}),
+		currentEvent: 0,
 	}
 	//start reading
-	n.sc.Subscribe(n.readSubject, func(msg *stan.Msg) {
+	sub, err := n.sc.Subscribe(n.readSubject, func(msg *stan.Msg) {
 		n.currentEvent++
 		n.readChan <- msg.Data
 
-	}, stan.DurableName("TODOCHANGE"))
-	//start writing
+	}, stan.DurableName(initialState.DurableName))
+	n.sub = sub
+	return n, nil
+}
+
+//Since we are using nats streaming and we use durable subscription we don't need any state.
+func (n *NatsStreamingInput) State() ([]byte, error) {
+	return nil, nil
+}
+func (n *NatsStreamingInput) Name() string {
+	return "NatsStreaming-Input"
+}
+
+//Since we are using nats streaming and we use durable subscription we don't need any state.
+func (n *NatsStreamingInput) LoadState(r io.Reader) error {
+	state := &NatsStreamingInputState{}
+	return json.NewDecoder(r).Decode(state)
+}
+
+func (n *NatsStreamingInput) Input() (chan interface{}, error) {
+	return n.readChan, nil
+}
+
+type NatsStreamingOutputState struct {
+	DurableName string
+}
+
+type NatsStreamingOutput struct {
+	sc           stan.Conn
+	writeSubject string
+	writeChan    chan interface{}
+	currentEvent uint64
+}
+
+func NewNatsStreamingOutput(initialState *NatsStreamingOutputState, url string, writeSubject string, clusterID string, clientID string, options ...stan.Option) (plumber.Output, error) {
+	nc, err := nats.Connect(url)
+	if err != nil {
+		return nil, err
+	}
+	sc, err := stan.Connect(clusterID, clientID, stan.NatsConn(nc),
+		stan.SetConnectionLostHandler(func(_ stan.Conn, reason error) {
+			log.Println("Connection lost, reason: %v", reason)
+			return
+		}))
+
+	if err != nil {
+		return nil, err
+	}
+	n := &NatsStreamingOutput{
+		sc:           sc,
+		writeSubject: writeSubject,
+		writeChan:    make(chan interface{}),
+		currentEvent: 0,
+	}
 	go func() {
 		for v := range n.writeChan {
-			bs, err := json.Marshal(v)
-			if err != nil {
-				log.Println(err)
-			}
-			err = n.sc.Publish(n.writerSubject, bs)
-			if err != nil {
-				log.Println(err)
-			}
-
+			//TODO: handle this error
+			n.sc.Publish(writeSubject, v.([]byte))
 		}
-
 	}()
 	return n, nil
 }
 
 //Since we are using nats streaming and we use durable subscription we don't need any state.
-func (n *NatsStreaming) State() map[string]interface{} {
-	return map[string]interface{}{}
+func (n *NatsStreamingOutput) State() ([]byte, error) {
+	return nil, nil
 }
-func (n *NatsStreaming) Name() string {
-	return "Nats-Streaming"
-}
-
-func (n *NatsStreaming) LoadState(s map[string]interface{}) {
-	n.currentEvent = s["current_event"].(uint64)
-}
-func (n *NatsStreaming) Input() chan interface{} {
-	return n.readChan
+func (n *NatsStreamingOutput) Name() string {
+	return "NatsStreaming-Output"
 }
 
-func (n *NatsStreaming) Output() chan interface{} {
-	return n.writeChan
+//Since we are using nats streaming and we use durable subscription we don't need any state.
+func (n *NatsStreamingOutput) LoadState(r io.Reader) error {
+	state := &NatsStreamingInputState{}
+	return json.NewDecoder(r).Decode(state)
+}
+
+func (n *NatsStreamingOutput) Output() (chan interface{}, error) {
+	return n.writeChan, nil
 }

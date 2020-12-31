@@ -2,79 +2,121 @@ package stream
 
 import (
 	"encoding/json"
-	"os"
-
 	"github.com/amirrezaask/plumber"
+	"io"
+	"os"
 )
 
-type fileStream struct {
-	fd           *os.File
-	currentByte  uint64
-	chunksLength uint64
-	readChan     chan interface{}
-	writeChan    chan interface{}
+type fileInputState struct {
+	CurrentByte uint64
 }
 
-func NewFileStream(path string, chunksLength uint64) (plumber.Stream, error) {
+type fileInput struct {
+	fd           *os.File
+	s            *fileInputState
+	chunksLength uint64
+	readChan     chan interface{}
+}
+
+func NewFileInput(path string, initialState *fileInputState, chunksLength uint64) (plumber.Input, error) {
 	fd, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-	f := &fileStream{
+	f := &fileInput{
 		fd:           fd,
 		readChan:     make(chan interface{}),
+		s:            initialState,
 		chunksLength: chunksLength,
-		writeChan:    make(chan interface{}),
-		currentByte:  0,
 	}
 
 	go func() {
 		for {
 			bs := make([]byte, f.chunksLength)
-			n, err := f.fd.ReadAt(bs, int64(f.currentByte+1))
+			n, err := f.fd.ReadAt(bs, int64(f.s.CurrentByte+1))
 			if err != nil {
 				return
 			}
-			f.currentByte += uint64(n)
+			f.s.CurrentByte += uint64(n)
 			f.readChan <- bs
 		}
 
 	}()
 
+	return f, nil
+}
+func (f *fileInput) Name() string {
+	return "file-stream"
+}
+
+func (f *fileInput) LoadState(r io.Reader) error {
+	s := &fileInputState{}
+	return json.NewDecoder(r).Decode(s)
+}
+
+func (f *fileInput) Input() (chan interface{}, error) {
+	return f.readChan, nil
+}
+
+func (f *fileInput) State() ([]byte, error) {
+	return json.Marshal(f.s)
+}
+
+type fileOutputState struct {
+	CurrentByte uint64
+}
+
+type fileOutput struct {
+	fd           *os.File
+	state        *fileOutputState
+	chunksLength uint64
+	writeChan    chan interface{}
+}
+
+func NewFileOutput(path string, initialState *fileOutputState, chunksLength uint64) (plumber.Output, error) {
+	fd, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	f := &fileOutput{
+		fd:           fd,
+		state:        initialState,
+		chunksLength: chunksLength,
+	}
 	go func() {
 		for v := range f.writeChan {
 			bs, err := json.Marshal(v)
 			if err != nil {
 				continue
 			}
-			n, err := f.fd.WriteAt(bs, int64(f.currentByte))
+			n, err := f.fd.WriteAt(bs, int64(f.state.CurrentByte))
 			if err != nil {
 				continue
 			}
-			f.currentByte += uint64(n)
+			f.state.CurrentByte += uint64(n)
 		}
 	}()
-
 	return f, nil
 }
-func (f *fileStream) Name() string {
-	return "file-stream"
-}
 
-func (f *fileStream) LoadState(s map[string]interface{}) {
-	f.currentByte = s["current_byte"].(uint64)
-}
-
-func (f *fileStream) Input() chan interface{} {
-	return f.readChan
-}
-
-func (f *fileStream) Output() chan interface{} {
-	return f.writeChan
-}
-
-func (f *fileStream) State() map[string]interface{} {
-	return map[string]interface{}{
-		"current_byte": f.currentByte,
+func (f *fileOutput) LoadState(reader io.Reader) error {
+	s := &fileOutputState{}
+	err := json.NewDecoder(reader).Decode(s)
+	if err != nil {
+		return err
 	}
+	f.state = s
+	return nil
+}
+
+func (f *fileOutput) State() ([]byte, error) {
+	return json.Marshal(f.state)
+}
+
+func (f *fileOutput) Name() string {
+	return "file_output"
+}
+
+func (f *fileOutput) Output() (chan interface{}, error) {
+	return f.writeChan, nil
 }

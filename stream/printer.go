@@ -2,6 +2,7 @@ package stream
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/amirrezaask/plumber"
 )
@@ -16,13 +17,13 @@ func NewPrinterOutput() plumber.Output {
 	}
 	go func() {
 		for v := range p.writeChan {
-			fmt.Printf("Printer:: %s\n", v)
+			fmt.Printf("Printer:: %state\n", v)
 		}
 	}()
 	return p
 }
 
-func (a *PrinterOutput) LoadState(map[string]interface{}) error {
+func (a *PrinterOutput) LoadState(r io.Reader) error {
 	return nil
 }
 
@@ -30,8 +31,8 @@ func (a *PrinterOutput) Output() (chan interface{}, error) {
 	return a.writeChan, nil
 }
 
-func (a *PrinterOutput) State() map[string]interface{} {
-	return nil
+func (a *PrinterOutput) State() ([]byte, error) {
+	return nil, nil
 }
 
 func (a *PrinterOutput) Name() string {

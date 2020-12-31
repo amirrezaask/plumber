@@ -1,47 +1,39 @@
 package stream
 
 import (
+	"errors"
 	"github.com/amirrezaask/plumber"
+	"io"
 )
 
-type ChanStream struct {
-	c         chan interface{}
-	readChan  chan interface{}
-	writeChan chan interface{}
+type ChanInput struct {
+	readChan chan interface{}
+	c        chan interface{}
 }
 
-//TODO: update according to stream constructor
-func NewChanStream() plumber.Stream {
-	st := &ChanStream{c: make(chan interface{}), readChan: make(chan interface{}),
-		writeChan: make(chan interface{})}
+func NewChanInput() plumber.Input {
+	st := &ChanInput{c: make(chan interface{}), readChan: make(chan interface{})}
 	go func() {
 		for v := range st.c {
-			st.Input() <- v
+			st.readChan <- v
 		}
 	}()
 
-	go func() {
-		for v := range st.writeChan {
-			st.c <- v
-		}
-	}()
 	return st
 }
 
-func (d *ChanStream) Name() string {
+func (d *ChanInput) Name() string {
 	return "chan-stream"
 }
 
-func (d *ChanStream) LoadState(m map[string]interface{}) {
-	return
-}
-func (d *ChanStream) State() map[string]interface{} {
-	return map[string]interface{}{}
-}
-func (d *ChanStream) Input() chan interface{} {
-	return d.readChan
+func (d *ChanInput) LoadState(r io.Reader) error {
+	return errors.New("chan stream is stateless")
 }
 
-func (d *ChanStream) Output() chan interface{} {
-	return d.writeChan
+func (d *ChanInput) State() ([]byte, error) {
+	return nil, nil
+}
+
+func (d *ChanInput) Input() (chan interface{}, error) {
+	return d.readChan, nil
 }

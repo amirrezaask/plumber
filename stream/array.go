@@ -2,6 +2,7 @@ package stream
 
 import (
 	"github.com/amirrezaask/plumber"
+	"io"
 )
 
 //ArrayInput uses an array to feed data into pipeline.
@@ -20,7 +21,7 @@ func NewArrayInput(words ...interface{}) plumber.Input {
 	return a
 }
 
-func (a *ArrayInput) LoadState(map[string]interface{}) error {
+func (a *ArrayInput) LoadState(r io.Reader) error {
 	return nil
 }
 
@@ -28,8 +29,8 @@ func (a *ArrayInput) Input() (chan interface{}, error) {
 	return a.readChan, nil
 }
 
-func (a *ArrayInput) State() map[string]interface{} {
-	return nil
+func (a *ArrayInput) State() ([]byte, error) {
+	return nil, nil
 }
 
 func (a *ArrayInput) Name() string {
