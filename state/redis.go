@@ -77,6 +77,16 @@ func (r *redisState) Get(key string) (interface{}, error) {
 	return res.Val(), nil
 }
 
+func (r *redisState) GetBytes(key string) ([]byte, error) {
+	res := r.conn.Get(r.ctx, key)
+	if err := res.Err(); err != nil {
+		if err == redis.Nil {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return res.Bytes()
+}
 func (r *redisState) Set(key string, value interface{}) error {
 	statusCmd := r.conn.Set(r.ctx, key, value, r.ttl)
 	if err := statusCmd.Err(); err != nil {

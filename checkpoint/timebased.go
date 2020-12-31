@@ -11,12 +11,12 @@ func WithInterval(d time.Duration) plumber.Checkpoint {
 		for range time.Tick(d) {
 			err := s.UpdateState()
 			if err != nil {
-				s.Logger().Error("checkpoint error: %s", err.Error())
+				s.Logger().Errorf("checkpoint error: %s", err.Error())
 				return
 			}
 			err = s.State().Flush()
 			if err != nil {
-				s.Logger().Error("checkpoint error: %s", err.Error())
+				s.Logger().Errorf("checkpoint error: %s", err.Error())
 			}
 		}
 	}

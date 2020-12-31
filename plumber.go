@@ -35,13 +35,14 @@ type Pipeline interface {
 	Initiate() (chan error, error)
 	GetInputStream() Input
 	GetOutputStream() Output
-	WithLogger(l Logger)
+	WithLogger(l Logger) Pipeline
 }
 
 //State
 type State interface {
 	Set(key string, value interface{}) error
 	Get(key string) (interface{}, error)
+	GetBytes(key string) ([]byte, error)
 	All() (map[string]interface{}, error)
 	Flush() error
 }
@@ -60,3 +61,10 @@ type Pipe func(*PipeCtx)
 
 //Checkpoints for fault tolerant Pipeline.
 type Checkpoint func(Pipeline)
+
+type Logger interface {
+	Debugf(format string, args ...interface{})
+	Warnf(format string, args ...interface{})
+	Errorf(format string, args ...interface{})
+	Fatalf(format string, args ...interface{})
+}

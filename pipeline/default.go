@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"bytes"
 	"errors"
 	"github.com/amirrezaask/plumber"
 )
@@ -63,11 +64,19 @@ func (s *defaultPipeline) From(st plumber.Input) plumber.Pipeline {
 }
 
 func (s *defaultPipeline) UpdateState() error {
-	err := s.State().Set(s.in.Name(), s.in.State())
+	inState, err := s.in.State()
 	if err != nil {
 		return err
 	}
-	err = s.State().Set(s.out.Name(), s.out.State())
+	err = s.State().Set(s.in.Name(), inState)
+	if err != nil {
+		return err
+	}
+	outState, err := s.out.State()
+	if err != nil {
+		return err
+	}
+	err = s.State().Set(s.out.Name(), outState)
 	if err != nil {
 		return err
 	}
@@ -79,8 +88,9 @@ func (s *defaultPipeline) To(st plumber.Output) plumber.Pipeline {
 	return s
 }
 
-func (s *defaultPipeline) WithLogger(l plumber.Logger) {
+func (s *defaultPipeline) WithLogger(l plumber.Logger) plumber.Pipeline {
 	s.logger = l
+	return s
 }
 
 func (s *defaultPipeline) Logger() plumber.Logger {
@@ -89,23 +99,23 @@ func (s *defaultPipeline) Logger() plumber.Logger {
 
 func (s *defaultPipeline) Initiate() (chan error, error) {
 	// update streams state if there is any checkpoints
-	inState, err := s.State().Get(s.in.Name())
+	inState, err := s.State().GetBytes(s.in.Name())
 	if err != nil {
 		return nil, err
 	}
 
-	outState, err := s.State().Get(s.out.Name())
+	outState, err := s.State().GetBytes(s.out.Name())
 	if err != nil {
 		return nil, err
 	}
 	if inState != nil {
-		err := s.in.LoadState(inState.(map[string]interface{}))
+		err := s.in.LoadState(bytes.NewReader(inState))
 		if err != nil {
 			return nil, err
 		}
 	}
 	if outState != nil {
-		err := s.out.LoadState(outState.(map[string]interface{}))
+		err := s.out.LoadState(bytes.NewReader(outState))
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +128,7 @@ func (s *defaultPipeline) Initiate() (chan error, error) {
 	var lcs []*container
 	for idx, n := range s.nodes {
 		lc := &container{
-			pipeCtx: &plumber.PipeCtx{},
+			pipeCtx: &plumber.PipeCtx{Logger: s.logger},
 		}
 		lc.pipe = n
 		if idx == 0 {

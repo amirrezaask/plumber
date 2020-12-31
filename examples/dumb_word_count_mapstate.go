@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/amirrezaask/plumber/pipe"
+	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
 
 	"github.com/amirrezaask/plumber"
 	"github.com/amirrezaask/plumber/checkpoint"
-	"github.com/amirrezaask/plumber/pipe"
 	"github.com/amirrezaask/plumber/pipeline"
 	"github.com/amirrezaask/plumber/state"
 	"github.com/amirrezaask/plumber/stream"
@@ -34,12 +35,16 @@ func count(ctx *plumber.PipeCtx) {
 			ctx.Err <- err
 			return
 		}
+		if c == nil {
+			c = 0
+		}
 		counter, ok := c.(int)
 		if !ok {
-			ctx.Logger.Error("state of %s is not an int", word)
+			ctx.Logger.Errorf("state of %s is not an int", word)
+			continue
 		}
 		counter = counter + 1
-		err = ctx.State.Set(string(word), counter)
+		err = ctx.State.Set(word, counter)
 		if err != nil {
 			ctx.Err <- err
 			return
@@ -47,15 +52,13 @@ func count(ctx *plumber.PipeCtx) {
 		ctx.Out <- word
 	}
 }
+
 func main() {
-	//r, err := state.NewRedis(context.Background(), "localhost", "6379", "", "", 0)
 	s := state.NewMapState()
-	//if err != nil {
-	//	panic(err)
-	//}
-	//create our plumber pipeline
+
 	errs, err := pipeline.
 		NewDefaultSystem().
+		WithLogger(logrus.New()).
 		SetCheckpoint(checkpoint.WithInterval(time.Second * 1)).
 		SetState(s).
 		From(stream.NewArrayInput("amirreza", "parsa")).
