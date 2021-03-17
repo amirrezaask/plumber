@@ -155,7 +155,9 @@ func (s *defaultPipeline) Initiate() (chan error, error) {
 	errs := make(chan error, 1024) //TODO: configure error chan cap
 
 	//start checkpoint process
-	go s.Checkpoint()
+	if s.checkpoint != nil {
+		go s.Checkpoint()
+	}
 	for _, lc := range lcs {
 		go func(container *container) {
 			container.pipeCtx.Err = errs
