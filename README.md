@@ -32,6 +32,7 @@ Streams are the way we move data around. Streams are the input and output of our
 - File
 - Printer
 - Array
+- SQL
 
 ## Pipe 
 Pipes are pure functions that get the state and an input and return some output. Remember that since Pipes get runned using Goroutiens you can block in them so you can do any 
