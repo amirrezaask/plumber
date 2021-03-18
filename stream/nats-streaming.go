@@ -24,15 +24,11 @@ type NatsStreamingInput struct {
 }
 
 func NewNatsStreamingInput(initialState *NatsStreamingInputState, url string, readSubject string, clusterID string, clientID string, options ...stan.Option) (plumber.Input, error) {
-	nc, err := nats.Connect(url)
-	if err != nil {
-		return nil, err
-	}
-	sc, err := stan.Connect(clusterID, clientID, stan.NatsConn(nc),
-		stan.SetConnectionLostHandler(func(_ stan.Conn, reason error) {
-			log.Println("Connection lost, reason: %v", reason)
-			return
-		}))
+	//nc, err := nats.Connect(url)
+	//if err != nil {
+	//	return nil, err
+	//}
+	sc, err := stan.Connect(clusterID, clientID)
 
 	if err != nil {
 		return nil, err

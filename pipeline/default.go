@@ -4,9 +4,14 @@ import (
 	"bytes"
 	"errors"
 	"github.com/amirrezaask/plumber"
+	"github.com/amirrezaask/plumber/pipe"
 )
 
 type SystemConfigurer func(s plumber.Pipeline) plumber.Pipeline
+
+func pass(_ plumber.State, i interface{}) (interface{}, error) {
+	return i, nil
+}
 
 type defaultPipeline struct {
 	name       string
@@ -124,7 +129,9 @@ func (s *defaultPipeline) Initiate() (chan error, error) {
 		pipeCtx *plumber.PipeCtx
 		pipe    plumber.Pipe
 	}
-
+	if len(s.nodes) < 1 {
+		s.nodes = append(s.nodes, pipe.MakePipe(pass))
+	}
 	var lcs []*container
 	for idx, n := range s.nodes {
 		lc := &container{
@@ -152,6 +159,7 @@ func (s *defaultPipeline) Initiate() (chan error, error) {
 		}
 		lcs = append(lcs, lc)
 	}
+
 	errs := make(chan error, 1024) //TODO: configure error chan cap
 
 	//start checkpoint process
